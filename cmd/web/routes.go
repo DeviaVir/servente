@@ -14,17 +14,19 @@ func (app *application) routes() http.Handler {
 	mux := pat.New()
 	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
 	mux.Get("/about", dynamicMiddleware.ThenFunc(app.about))
-	mux.Get("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.newServiceForm))
-	mux.Post("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.newService))
-	mux.Get("/service/:id", dynamicMiddleware.ThenFunc(app.showService))
+	mux.Get("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceNewForm))
+	mux.Post("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceNew))
+	mux.Get("/service/:id", dynamicMiddleware.ThenFunc(app.serviceShow))
 
 	// User auth
-	mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))
-	mux.Post("/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))
-	mux.Get("/user/login", dynamicMiddleware.ThenFunc(app.loginUserForm))
-	mux.Post("/user/login", dynamicMiddleware.ThenFunc(app.loginUser))
-	mux.Post("/user/logout", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.logoutUser))
+	mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.userSignupForm))
+	mux.Post("/user/signup", dynamicMiddleware.ThenFunc(app.userSignup))
+	mux.Get("/user/login", dynamicMiddleware.ThenFunc(app.userLoginForm))
+	mux.Post("/user/login", dynamicMiddleware.ThenFunc(app.userLogin))
+	mux.Post("/user/logout", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.userLogout))
 	mux.Get("/user/profile", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.userProfile))
+	mux.Get("/user/change-password", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.userChangePasswordForm))
+	mux.Post("/user/change-password", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.userChangePassword))
 
 	mux.Get("/ping", http.HandlerFunc(ping))
 

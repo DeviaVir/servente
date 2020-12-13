@@ -31,7 +31,7 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "about.page.tmpl", nil)
 }
 
-func (app *application) showService(w http.ResponseWriter, r *http.Request) {
+func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
@@ -53,11 +53,11 @@ func (app *application) showService(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (app *application) newServiceForm(w http.ResponseWriter, r *http.Request) {
+func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "new.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
-func (app *application) newService(w http.ResponseWriter, r *http.Request) {
+func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -85,11 +85,11 @@ func (app *application) newService(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/service/%d", id), http.StatusSeeOther)
 }
 
-func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+func (app *application) userSignupForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "signup.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
-func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -124,11 +124,11 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
-func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
+func (app *application) userLoginForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "login.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
-func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -149,10 +149,15 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	app.session.Put(r, "authenticatedUserID", id)
 
+	path := app.session.PopString(r, "redirectPathAfterLogin")
+	if path != "" {
+		http.Redirect(w, r, path, http.StatusSeeOther)
+		return
+	}
 	http.Redirect(w, r, "/service/new", http.StatusSeeOther)
 }
 
-func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
+func (app *application) userLogout(w http.ResponseWriter, r *http.Request) {
 	app.session.Remove(r, "authenticatedUserID")
 
 	app.session.Put(r, "flash", "You've been logged out successfully!")
@@ -169,4 +174,44 @@ func (app *application) userProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, r, "profile.page.tmpl", &templateData{User: user})
+}
+
+func (app *application) userChangePasswordForm(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "password.page.tmpl", &templateData{Form: forms.New(nil)})
+}
+
+func (app *application) userChangePassword(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("currentPassword", "newPassword", "newPasswordConfirmation")
+	form.MinLength("newPassword", 10)
+	if form.Get("newPassword") != form.Get("newPasswordConfirmation") {
+		form.Errors.Add("newPasswordConfirmation", "Passwords do not match")
+	}
+
+	if !form.Valid() {
+		app.render(w, r, "password.page.tmpl", &templateData{Form: form})
+		return
+	}
+
+	userID := app.session.GetInt(r, "authenticatedUserID")
+
+	err = app.users.ChangePassword(userID, form.Get("currentPassword"), form.Get("newPassword"))
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.Errors.Add("currentPassword", "Password is incorrect")
+			app.render(w, r, "password.page.tmpl", &templateData{Form: form})
+		} else if err != nil {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	app.session.Put(r, "flash", "You've successfully changed your password!")
+	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
 }
