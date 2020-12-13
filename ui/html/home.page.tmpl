@@ -1,0 +1,25 @@
+{{template "base" .}}
+
+{{define "title"}}Home{{end}}
+
+{{define "main"}}
+  <h2>Latest Services</h2>
+  {{if .Services}}
+    <table>
+      <tr>
+        <th>Title</th>
+        <th>Created</th>
+        <th>ID</th>
+      </tr>
+      {{range .Services}}
+      <tr>
+        <td><a href='/service/{{.ID}}'>{{.Title}}</a></td>
+        <td>{{.Created | humanDate}}</td>
+        <td>#{{.ID}}</td>
+      </tr>
+      {{end}}
+    </table>
+  {{else}}
+    <p>There's nothing to see here yet!</p>
+  {{end}}
+{{end}}
