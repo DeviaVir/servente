@@ -17,6 +17,7 @@ type templateData struct {
 	IsAuthenticated bool
 	Service         *models.Service
 	Services        []*models.Service
+	User            *models.User
 }
 
 func humanDate(t time.Time) string {
