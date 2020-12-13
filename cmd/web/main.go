@@ -22,6 +22,7 @@ type contextKey string
 const contextKeyIsAuthenticated = contextKey("isAuthenticated")
 
 type application struct {
+	debug    bool
 	errorLog *log.Logger
 	infoLog  *log.Logger
 	session  *sessions.Session
@@ -40,6 +41,7 @@ type application struct {
 }
 
 func main() {
+	debug := flag.Bool("debug", false, "Enable debug stack traces shown to users")
 	addr := flag.String("addr", ":4000", "HTTP Network Address")
 	dsn := flag.String("dsn", "servente:servente@/servente?parseTime=true", "MySQL data source name")
 	secret := flag.String("secret", "s6ndh+pPbnzHbS*+9Pk8qGWhtzbpa!ge", "Cookie secret key")
@@ -66,6 +68,7 @@ func main() {
 	session.Lifetime = time.Duration(*sessionLifetimeHours) * time.Hour
 
 	app := &application{
+		debug:         *debug,
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		session:       session,
