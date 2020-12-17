@@ -13,8 +13,9 @@ import (
 	"github.com/DeviaVir/servente/pkg/models"
 	"github.com/DeviaVir/servente/pkg/models/mysql"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/golangcollege/sessions"
+	gormMysql "gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type contextKey string
@@ -27,9 +28,9 @@ type application struct {
 	infoLog  *log.Logger
 	session  *sessions.Session
 	services interface {
-		Insert(string, string, string) (int, error)
+		Insert(string, string, string, string, int) (int, error)
 		Get(int) (*models.Service, error)
-		Latest() ([]*models.Service, error)
+		Latest(int) ([]*models.Service, error)
 	}
 	templateCache map[string]*template.Template
 	users         interface {
@@ -43,7 +44,7 @@ type application struct {
 func main() {
 	debug := flag.Bool("debug", false, "Enable debug stack traces shown to users")
 	addr := flag.String("addr", ":4000", "HTTP Network Address")
-	dsn := flag.String("dsn", "servente:servente@/servente?parseTime=true", "MySQL data source name")
+	dsn := flag.String("dsn", "servente:servente@/servente?charset=utf8mb4&parseTime=true", "MySQL data source name")
 	secret := flag.String("secret", "s6ndh+pPbnzHbS*+9Pk8qGWhtzbpa!ge", "Cookie secret key")
 	sessionLifetimeHours := flag.Int("session-lifetime-hours", 12, "Session cookie lifetime")
 	tlsCertPath := flag.String("tls-cert-path", "./tls/cert.pem", "TLS certificate path")
@@ -53,11 +54,12 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	db, err := openDB(*dsn)
+	db, sqlDB, err := openDB(*dsn)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	defer db.Close()
+	defer sqlDB.Close()
+	db.AutoMigrate(&models.User{}, &models.Service{}, &models.Attribute{}, &models.Setting{}, &models.AuditLog{})
 
 	templateCache, err := newTemplateCache("./ui/html/")
 	if err != nil {
@@ -97,15 +99,20 @@ func main() {
 	errorLog.Fatal(err)
 }
 
-func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
+func openDB(dsn string) (*gorm.DB, *sql.DB, error) {
+	db, err := gorm.Open(gormMysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	if err = db.Ping(); err != nil {
-		return nil, err
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return db, nil
+	if err = sqlDB.Ping(); err != nil {
+		return nil, nil, err
+	}
+
+	return db, sqlDB, nil
 }

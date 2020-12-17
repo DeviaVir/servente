@@ -1,18 +1,16 @@
 package mysql
 
 import (
-	"database/sql"
 	"errors"
-	"strings"
 
 	"github.com/DeviaVir/servente/pkg/models"
 
-	"github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserModel struct {
-	DB *sql.DB
+	DB *gorm.DB
 }
 
 func (m *UserModel) Insert(name, email, password string) error {
@@ -22,16 +20,11 @@ func (m *UserModel) Insert(name, email, password string) error {
 		return err
 	}
 
-	stmt := `INSERT INTO users (name, email, hashed_password, created)
-    VALUES(?, ?, ?, UTC_TIMESTAMP())`
+	user := models.User{Name: name, Email: email, HashedPassword: hashedPassword, Active: true}
 
-	_, err = m.DB.Exec(stmt, name, email, string(hashedPassword))
-	if err != nil {
-		var mySQLError *mysql.MySQLError
-		if errors.As(err, &mySQLError) {
-			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
-				return models.ErrDuplicateEmail
-			}
+	if err := m.DB.Create(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrInvalidData) {
+			return models.ErrDuplicateEmail
 		}
 		return err
 	}
@@ -40,58 +33,46 @@ func (m *UserModel) Insert(name, email, password string) error {
 }
 
 func (m *UserModel) Authenticate(email, password string) (int, error) {
-	var id int
-	var hashedPassword []byte
-	stmt := "SELECT id, hashed_password FROM users WHERE email = ? AND active = TRUE"
-	row := m.DB.QueryRow(stmt, email)
-	err := row.Scan(&id, &hashedPassword)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+	user := models.User{}
+	if err := m.DB.Where("email = ?", email).Where("active = ?", true).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return 0, models.ErrInvalidCredentials
 		}
 		return 0, err
 	}
 
-	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
-	if err != nil {
+	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return 0, models.ErrInvalidCredentials
 		}
 		return 0, err
 	}
 
-	return id, nil
+	return int(user.ID), nil
 }
 
 func (m *UserModel) Get(id int) (*models.User, error) {
-	u := &models.User{}
+	user := models.User{}
 
-	stmt := `SELECT id, name, email, created, active FROM users
-    WHERE id = ?`
-	err := m.DB.QueryRow(stmt, id).Scan(&u.ID, &u.Name, &u.Email, &u.Created, &u.Active)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+	if err := m.DB.Where("id = ? AND active = ?", id, 1).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, models.ErrNoRecord
 		}
 		return nil, err
 	}
 
-	return u, nil
+	return &user, nil
 }
 
 // ChangePassword allows easily changing a user's password
 func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) error {
-	var currentHashedPassword []byte
+	user := models.User{}
 
-	// verify current password is correct
-	row := m.DB.QueryRow("SELECT hashed_password FROM users WHERE id = ?", id)
-	err := row.Scan(&currentHashedPassword)
-	if err != nil {
+	if err := m.DB.Where("id = ?", id).Select("hashed_password").First(&user).Error; err != nil {
 		return err
 	}
 
-	err = bcrypt.CompareHashAndPassword(currentHashedPassword, []byte(currentPassword))
-	if err != nil {
+	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(currentPassword)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return models.ErrInvalidCredentials
 		}
@@ -104,7 +85,9 @@ func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) 
 		return err
 	}
 
-	stmt := "UPDATE users SET hashed_password = ? WHERE id = ?"
-	_, err = m.DB.Exec(stmt, string(newHashedPassword), id)
-	return err
+	if err := m.DB.Model(&user).Update("hashed_password", string(newHashedPassword)).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

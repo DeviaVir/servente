@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -33,32 +35,41 @@ var functions = template.FuncMap{
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			pages, err := filepath.Glob(filepath.Join(path, "*.page.tmpl"))
+			if err != nil {
+				return err
+			}
 
-	pages, err := filepath.Glob(filepath.Join(dir, "*.page.tmpl"))
+			dirName := filepath.Base(path)
+			for _, page := range pages {
+				name := fmt.Sprintf("%s/%s", dirName, filepath.Base(page))
+
+				ts, err := template.New(filepath.Base(page)).Funcs(functions).ParseFiles(page)
+				if err != nil {
+					return err
+				}
+
+				ts, err = ts.ParseGlob(filepath.Join(dir, "*.layout.tmpl"))
+				if err != nil {
+					return err
+				}
+
+				ts, err = ts.ParseGlob(filepath.Join(dir, "*.partial.tmpl"))
+				if err != nil {
+					return err
+				}
+
+				cache[name] = ts
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	for _, page := range pages {
-		name := filepath.Base(page)
-
-		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
-		if err != nil {
-			return nil, err
-		}
-
-		ts, err = ts.ParseGlob(filepath.Join(dir, "*.layout.tmpl"))
-		if err != nil {
-			return nil, err
-		}
-
-		ts, err = ts.ParseGlob(filepath.Join(dir, "*.partial.tmpl"))
-		if err != nil {
-			return nil, err
-		}
-
-		cache[name] = ts
-	}
-
-	return cache, nil
+	return cache, err
 }

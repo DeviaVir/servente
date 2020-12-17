@@ -16,19 +16,19 @@ func ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	s, err := app.services.Latest()
+	s, err := app.services.Latest(10)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	app.render(w, r, "home.page.tmpl", &templateData{
+	app.render(w, r, "service/home.page.tmpl", &templateData{
 		Services: s,
 	})
 }
 
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "about.page.tmpl", nil)
+	app.render(w, r, "servente/about.page.tmpl", nil)
 }
 
 func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
@@ -48,18 +48,17 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, "show.page.tmpl", &templateData{
+	app.render(w, r, "service/show.page.tmpl", &templateData{
 		Service: s,
 	})
 }
 
 func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "new.page.tmpl", &templateData{Form: forms.New(nil)})
+	app.render(w, r, "service/new.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
 func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
@@ -67,14 +66,26 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 	form := forms.New(r.PostForm)
 	form.Required("title", "content", "expires")
 	form.MaxLength("title", 100)
-	form.PermittedValues("expires", "365", "7", "1")
+	form.PermittedValues("status", "1", "2", "3", "4", "5", "6")
 
 	if !form.Valid() {
-		app.render(w, r, "new.page.tmpl", &templateData{Form: form})
+		app.render(w, r, "service/new.page.tmpl", &templateData{Form: form})
 		return
 	}
 
-	id, err := app.services.Insert(form.Get("title"), form.Get("content"), form.Get("expires"))
+	status, err := strconv.ParseInt(form.Get("status"), 10, 0)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	id, err := app.services.Insert(
+		form.Get("identifier"),
+		form.Get("title"),
+		form.Get("description"),
+		form.Get("attributes"),
+		int(status),
+	)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -86,12 +97,11 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userSignupForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "signup.page.tmpl", &templateData{Form: forms.New(nil)})
+	app.render(w, r, "user/signup.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
@@ -104,15 +114,14 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	form.MinLength("password", 10)
 
 	if !form.Valid() {
-		app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+		app.render(w, r, "user/signup.page.tmpl", &templateData{Form: form})
 		return
 	}
 
-	err = app.users.Insert(form.Get("name"), form.Get("email"), form.Get("password"))
-	if err != nil {
+	if err := app.users.Insert(form.Get("name"), form.Get("email"), form.Get("password")); err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.Errors.Add("email", "Address is already in use")
-			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+			app.render(w, r, "user/signup.page.tmpl", &templateData{Form: form})
 		} else {
 			app.serverError(w, err)
 		}
@@ -125,12 +134,11 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLoginForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "login.page.tmpl", &templateData{Form: forms.New(nil)})
+	app.render(w, r, "user/login.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
@@ -140,7 +148,7 @@ func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.Errors.Add("generic", "Email or Password is incorrect")
-			app.render(w, r, "login.page.tmpl", &templateData{Form: form})
+			app.render(w, r, "user/login.page.tmpl", &templateData{Form: form})
 		} else {
 			app.serverError(w, err)
 		}
@@ -173,16 +181,15 @@ func (app *application) userProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, "profile.page.tmpl", &templateData{User: user})
+	app.render(w, r, "user/profile.page.tmpl", &templateData{User: user})
 }
 
 func (app *application) userChangePasswordForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "password.page.tmpl", &templateData{Form: forms.New(nil)})
+	app.render(w, r, "user/password.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
 func (app *application) userChangePassword(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
@@ -195,17 +202,16 @@ func (app *application) userChangePassword(w http.ResponseWriter, r *http.Reques
 	}
 
 	if !form.Valid() {
-		app.render(w, r, "password.page.tmpl", &templateData{Form: form})
+		app.render(w, r, "user/password.page.tmpl", &templateData{Form: form})
 		return
 	}
 
 	userID := app.session.GetInt(r, "authenticatedUserID")
 
-	err = app.users.ChangePassword(userID, form.Get("currentPassword"), form.Get("newPassword"))
-	if err != nil {
+	if err := app.users.ChangePassword(userID, form.Get("currentPassword"), form.Get("newPassword")); err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			form.Errors.Add("currentPassword", "Password is incorrect")
-			app.render(w, r, "password.page.tmpl", &templateData{Form: form})
+			app.render(w, r, "user/password.page.tmpl", &templateData{Form: form})
 		} else if err != nil {
 			app.serverError(w, err)
 		}
