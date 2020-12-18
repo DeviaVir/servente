@@ -64,8 +64,8 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	form := forms.New(r.PostForm)
-	form.Required("title", "content", "expires")
-	form.MaxLength("title", 100)
+	form.Required("title", "identifier", "status")
+	form.MaxLength("identifier", 100)
 	form.PermittedValues("status", "1", "2", "3", "4", "5", "6")
 
 	if !form.Valid() {

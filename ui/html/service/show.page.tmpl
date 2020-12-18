@@ -1,18 +1,18 @@
 {{template "base" .}}
 
-{{define "title"}}Service #{{.Service.ID}}{{end}}
+{{define "title"}}Service: {{.Service.Identifier}}{{end}}
 
 {{define "main"}}
   {{with .Service}}
   <div class='service'>
     <div class='metadata'>
       <strong>{{.Title}}</strong>
-      <span>#{{.ID}}</span>
+      <span>#{{.Identifier}}</span>
     </div>
-    <pre><code>{{.Content}}</code></pre>
+    <pre><code>{{.Description}}</code></pre>
     <div class='metadata'>
-      <time>Created: {{.Created | humanDate}}</time>
-      <time>Expires: {{.Expires | humanDate}}</time>
+      <time>Created: {{.CreatedAt | humanDate}}</time>
+      <time>Updated: {{.UpdatedAt | humanDate}}</time>
     </div>
   </div>
   {{end}}

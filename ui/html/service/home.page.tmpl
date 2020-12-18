@@ -14,7 +14,7 @@
       {{range .Services}}
       <tr>
         <td><a href='/service/{{.ID}}'>{{.Title}}</a></td>
-        <td>{{.Created | humanDate}}</td>
+        <td>{{.CreatedAt | humanDate}}</td>
         <td>#{{.ID}}</td>
       </tr>
       {{end}}

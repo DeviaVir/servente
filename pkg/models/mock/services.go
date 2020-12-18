@@ -1,19 +1,16 @@
 package mock
 
 import (
-	"time"
-
 	"github.com/DeviaVir/servente/pkg/models"
 )
 
 var mockService = &models.Service{
-	ID:          1,
+	Model:       *mockGorm,
 	Identifier:  "servente",
 	Title:       "Servente",
 	Description: "A fake service owned by golang...",
 	Attributes:  "",
 	Status:      1,
-	CreatedAt:   time.Now(),
 }
 
 type ServiceModel struct{}

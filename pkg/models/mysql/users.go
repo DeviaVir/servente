@@ -54,7 +54,7 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 func (m *UserModel) Get(id int) (*models.User, error) {
 	user := models.User{}
 
-	if err := m.DB.Where("id = ? AND active = ?", id, 1).First(&user).Error; err != nil {
+	if err := m.DB.Where("id = ? AND active = ?", id, 1).Select("name", "active", "id", "created_at", "email").First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, models.ErrNoRecord
 		}

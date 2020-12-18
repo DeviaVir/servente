@@ -33,7 +33,7 @@ func (m *ServiceModel) Insert(identifier, title, description, attributes string,
 func (m *ServiceModel) Get(id int) (*models.Service, error) {
 	service := models.Service{}
 
-	if err := m.DB.Where("id = ? AND active = ?", id, true).First(&service).Error; err != nil {
+	if err := m.DB.Where("id = ?", id, true).First(&service).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, models.ErrNoRecord
 		}
