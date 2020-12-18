@@ -1,0 +1,53 @@
+{{template "base" .}}
+
+{{define "title"}}Create new service{{end}}
+
+{{define "main"}}
+<form action='/service/new' method='POST'>
+  <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+  {{with .Form}}
+    <div>
+      <label for='identifier'>Identifier:</label>
+      {{with .Errors.Get "identifier"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <input type='text' placeholder='some-service-name' name='identifier' value='{{.Get "identifier"}}' id='identifier'>
+    </div>
+    <div>
+      <label for='title'>Title:</label>
+      {{with .Errors.Get "title"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <input type='text' placeholder='Some Service Name' name='title' value='{{.Get "title"}}' id='title'>
+    </div>
+    <div>
+      <label for='description'>Description:</label>
+      {{with .Errors.Get "description"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <textarea placeholder='Target audience, relevant time frames and other information about some service name' name='description' id='description'>{{.Get "description"}}</textarea>
+    </div>
+    <div>
+      <label>Attributes</label>
+      <p>...</p>
+    </div>
+    <div>
+      <label for='status'>Status:</label>
+      {{with .Errors.Get "status"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <select name='status' id='status'>
+        <option value='1'>In Development</option>
+        <option value='2'>Beta</option>
+        <option value='3'>Production</option>
+        <option value='4'>Maintain</option>
+        <option value='5'>Deprecated</option>
+        <option value='6'>Decommissioned</option>
+      </select>
+    </div>
+    <div>
+      <input type='submit' value='Publish Service'>
+    </div>
+  {{end}}
+</form>
+{{end}}

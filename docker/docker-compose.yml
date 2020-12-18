@@ -5,6 +5,7 @@ services:
     image: mysql:5.7
     volumes:
       - db_data:/var/lib/mysql
+      - ./mysql.cnf:/etc/mysql/conf.d/my.cnf:ro
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: somepassword

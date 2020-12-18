@@ -1,0 +1,19 @@
+{{template "base" .}}
+
+{{define "title"}}Service: {{.Service.Identifier}}{{end}}
+
+{{define "main"}}
+  {{with .Service}}
+  <div class='service'>
+    <div class='metadata'>
+      <strong>{{.Title}}</strong>
+      <span>#{{.Identifier}}</span>
+    </div>
+    <pre><code>{{.Description}}</code></pre>
+    <div class='metadata'>
+      <time>Created: {{.CreatedAt | humanDate}}</time>
+      <time>Updated: {{.UpdatedAt | humanDate}}</time>
+    </div>
+  </div>
+  {{end}}
+{{end}}

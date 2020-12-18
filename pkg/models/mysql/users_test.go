@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/DeviaVir/servente/pkg/models"
+	"gorm.io/gorm"
 )
 
 func TestUserModelGet(t *testing.T) {
@@ -21,13 +22,15 @@ func TestUserModelGet(t *testing.T) {
 	}{
 		{
 			name:   "Valid ID",
-			userID: 1,
+			userID: 2,
 			wantUser: &models.User{
-				ID:      1,
-				Name:    "Alice Jones",
-				Email:   "alice@example.com",
-				Created: time.Date(2018, 12, 23, 17, 25, 22, 0, time.UTC),
-				Active:  true,
+				Model: gorm.Model{
+					ID:        2,
+					CreatedAt: time.Date(2018, 12, 23, 17, 25, 22, 0, time.UTC),
+				},
+				Name:   "Alice Jones",
+				Email:  "alice@example.com",
+				Active: true,
 			},
 			wantError: nil,
 		},
@@ -39,7 +42,7 @@ func TestUserModelGet(t *testing.T) {
 		},
 		{
 			name:      "Non-existent ID",
-			userID:    2,
+			userID:    1,
 			wantUser:  nil,
 			wantError: models.ErrNoRecord,
 		},

@@ -1,17 +1,14 @@
 package mock
 
 import (
-	"time"
-
 	"github.com/DeviaVir/servente/pkg/models"
 )
 
 var mockUser = &models.User{
-	ID:      1,
-	Name:    "Alice",
-	Email:   "alice@example.com",
-	Created: time.Now(),
-	Active:  true,
+	Model:  *mockGorm,
+	Name:   "Alice",
+	Email:  "alice@example.com",
+	Active: true,
 }
 
 type UserModel struct{}
