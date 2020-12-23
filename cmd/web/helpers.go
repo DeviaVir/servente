@@ -12,7 +12,7 @@ import (
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	app.errorLog.Output(2, trace) // don't report from this function but the originator\
+	app.errorLog.Output(2, trace) // don't report from this function but the originator
 
 	if app.debug {
 		http.Error(w, trace, http.StatusInternalServerError)
