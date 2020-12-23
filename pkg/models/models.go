@@ -20,6 +20,14 @@ var (
 	StatusDecommissioned = 6
 )
 
+// Organization model definition for organizations
+type Organization struct {
+	gorm.Model
+	Identifier string `gorm:"type:varchar(100) unique"`
+	Name       string
+	Active     bool
+}
+
 // Service model definition of a service
 type Service struct {
 	gorm.Model
@@ -52,6 +60,7 @@ type Setting struct {
 	gorm.Model
 	Key   string
 	Value string
+	Tier  string
 }
 
 // AuditLog model definition of logs
