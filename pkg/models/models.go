@@ -18,6 +18,10 @@ var (
 	StatusMaintain       = 4
 	StatusDeprecated     = 5
 	StatusDecommissioned = 6
+
+	TypeLink    = "link"
+	TypeWebhook = "webhook"
+	TypeSelect  = "select"
 )
 
 // Organization model definition for organizations
@@ -53,6 +57,8 @@ type Attribute struct {
 	Key    string
 	Title  string
 	Active bool
+	Type   string
+	Values []string
 }
 
 // Setting model definition of configured settings
