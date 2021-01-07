@@ -58,7 +58,7 @@ type Attribute struct {
 	Title  string
 	Active bool
 	Type   string
-	Values []string
+	Values string
 }
 
 // Setting model definition of configured settings

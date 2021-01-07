@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.4'
 
 services:
   db:
@@ -14,5 +14,38 @@ services:
       MYSQL_PASSWORD: servente
     ports:
       - "3306:3306"
+    networks:
+      dev:
+        aliases:
+          - mysql
+
+  servente:
+    build:
+      context: .
+      dockerfile: Dockerfile.devel
+    volumes:
+      - "../:/go/src/app"
+    environment:
+      PORT: "4000"
+      DSN: "servente:servente@tcp(mysql:3306)/servente?charset=utf8mb4&parseTime=true"
+      DEBUG: "true"
+    ports:
+      - "4000:4000"
+    command:
+      - "/go/bin/gin"
+      - "--path=/go/src/app/"
+      - "--build=/go/src/app/cmd/web/"
+      - "--port=3000"
+      - "--appPort=4000"
+      - "--immediate"
+      - "--all"
+      - "run"
+      - "/go/src/app/cmd/web/main.go"
+    networks:
+      - dev
+
 volumes:
   db_data: {}
+
+networks:
+  dev:

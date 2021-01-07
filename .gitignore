@@ -1,1 +1,3 @@
 tls/
+vendor/
+gin-bin

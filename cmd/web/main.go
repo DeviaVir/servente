@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"database/sql"
-	"flag"
 	"html/template"
 	"log"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"github.com/DeviaVir/servente/pkg/models/mysql"
 
 	"github.com/golangcollege/sessions"
+	"github.com/namsral/flag"
 	gormMysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

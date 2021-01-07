@@ -120,6 +120,9 @@ docker: vendor
 	docker build -t "deviavir/${PKG_NAME}:${VERSION}" -f docker/Dockerfile .
 	docker push "deviavir/${PKG_NAME}:${VERSION}"
 
+docker-dev: vendor
+	docker-compose -f docker/docker-compose.yml up -d 
+
 # sign in case you were unable to sign during dist
 sign:
 ifndef GPG_KEY
