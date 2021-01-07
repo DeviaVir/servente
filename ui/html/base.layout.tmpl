@@ -14,14 +14,17 @@
     </header>
     <nav>
       <div>
-        <a href='/'>Home</a>
-        <a href='/about'>About</a>
         {{if .IsAuthenticated}}
-          <a href='/service/new'>Create service</a>
+          <a href='/services'>All Services</a>
+          <a href='/services/you'>Your Services</a>
+        {{else}}
+          <a href='/'>Home</a>
+          <a href='/about'>About</a>
         {{end}}
       </div>
       <div>
         {{if .IsAuthenticated}}
+          <a href='/organization/settings'>Organization</a>
           <a href='/user/profile'>Profile</a>
           <form action='/user/logout' method='POST'>
             <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>

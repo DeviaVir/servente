@@ -27,19 +27,21 @@ var (
 // Organization model definition for organizations
 type Organization struct {
 	gorm.Model
-	Identifier string `gorm:"type:varchar(100) unique"`
-	Name       string
-	Active     bool
+	Identifier     string `gorm:"type:varchar(100) unique"`
+	Name           string
+	Active         bool
+	OrganizationID uint
 }
 
 // Service model definition of a service
 type Service struct {
 	gorm.Model
-	Identifier  string `gorm:"type:varchar(100) unique"`
-	Title       string
-	Description string
-	Attributes  string
-	Status      int
+	Identifier   string `gorm:"type:varchar(100) unique"`
+	Title        string
+	Description  string
+	Attributes   string
+	Status       int
+	Organization Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 // User model definition of a user
@@ -49,29 +51,33 @@ type User struct {
 	Email          string `gorm:"unique"`
 	HashedPassword []byte `gorm:"type:char(60)"`
 	Active         bool
+	Organizations  []Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 // Attribute model definition of available attributes
 type Attribute struct {
 	gorm.Model
-	Key    string
-	Title  string
-	Active bool
-	Type   string
-	Values string
+	Key          string
+	Title        string
+	Active       bool
+	Type         string
+	Values       string
+	Organization Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 // Setting model definition of configured settings
 type Setting struct {
 	gorm.Model
-	Key   string
-	Value string
-	Tier  string
+	Key          string
+	Value        string
+	Tier         string
+	Organization Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 // AuditLog model definition of logs
 type AuditLog struct {
 	gorm.Model
-	User    int
-	Message string
+	User         int
+	Message      string
+	Organization Organization `gorm:"foreignKey:OrganizationID"`
 }

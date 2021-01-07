@@ -1,9 +1,10 @@
 {{template "base" .}}
 
-{{define "title"}}Home{{end}}
+{{define "title"}}Services{{end}}
 
 {{define "main"}}
-  <h2>Latest Services</h2>
+  <h2>Services</h2>
+  <p><a href='/service/new'>Create service</a></p>
   {{if .Services}}
     <table>
       <tr>
@@ -21,5 +22,6 @@
     </table>
   {{else}}
     <p>There's nothing to see here yet!</p>
+    <p><a href='/service/new'>Create service</a></p>
   {{end}}
 {{end}}

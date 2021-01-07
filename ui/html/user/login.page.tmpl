@@ -10,6 +10,10 @@
       <div class='error'>{{.}}</div>
     {{end}}
     <div>
+      <label>Organization:</label>
+      <input type='text' name='organization' value='{{.Get "organization"}}'>
+    </div>
+    <div>
       <label>Email:</label>
       <input type='email' name='email' value='{{.Get "email"}}'>
     </div>

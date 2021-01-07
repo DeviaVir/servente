@@ -16,19 +16,35 @@ func ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "servente/home.page.tmpl", nil)
+}
+
+func (app *application) about(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "servente/about.page.tmpl", nil)
+}
+
+func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
 	s, err := app.services.Latest(10)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	app.render(w, r, "service/home.page.tmpl", &templateData{
+	app.render(w, r, "service/services.page.tmpl", &templateData{
 		Services: s,
 	})
 }
 
-func (app *application) about(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "servente/about.page.tmpl", nil)
+func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
+	s, err := app.services.Latest(10)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.render(w, r, "service/services.page.tmpl", &templateData{
+		Services: s,
+	})
 }
 
 func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
