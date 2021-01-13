@@ -1,0 +1,9 @@
+{{template "base" .}}
+
+{{define "title"}}Organization: {{.Organization.Name}}{{end}}
+
+{{define "main"}}
+  <h2>Organization: {{.Organization.Name}}</h2>
+  <p>This is your organization.</p>
+  <p><a href="/organization/selector">Switch to a different organization</a></p>
+{{end}}

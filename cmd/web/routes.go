@@ -14,11 +14,22 @@ func (app *application) routes() http.Handler {
 	mux := pat.New()
 	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
 	mux.Get("/about", dynamicMiddleware.ThenFunc(app.about))
+
+	// Service management
 	mux.Get("/services", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceHome))
 	mux.Get("/services/you", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceHomeYou))
 	mux.Get("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceNewForm))
 	mux.Post("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceNew))
 	mux.Get("/service/:id", dynamicMiddleware.ThenFunc(app.serviceShow))
+
+	// Organization settings
+	mux.Get("/organization/start", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationStart))
+	mux.Get("/organization/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationNewForm))
+	mux.Post("/organization/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationNew))
+	mux.Get("/organization/selector", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationSelectorForm))
+	mux.Post("/organization/selector", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationSelector))
+	mux.Get("/organization/:id", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationsHomeForm))
+	mux.Post("/organization/:id", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationsHome))
 
 	// User auth
 	mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.userSignupForm))

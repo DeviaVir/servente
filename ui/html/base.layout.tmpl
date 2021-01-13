@@ -24,7 +24,7 @@
       </div>
       <div>
         {{if .IsAuthenticated}}
-          <a href='/organization/settings'>Organization</a>
+          <a href='/organization/start'>Organization</a>
           <a href='/user/profile'>Profile</a>
           <form action='/user/logout' method='POST'>
             <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>

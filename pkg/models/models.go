@@ -24,24 +24,26 @@ var (
 	TypeSelect  = "select"
 )
 
+// @NOTE: add new models to web/main.go AutoMigrate to have them automatically created
+
 // Organization model definition for organizations
 type Organization struct {
 	gorm.Model
-	Identifier     string `gorm:"type:varchar(100) unique"`
-	Name           string
-	Active         bool
-	OrganizationID uint
+	Identifier string `gorm:"type:varchar(100) unique"`
+	Name       string
+	Active     bool
 }
 
 // Service model definition of a service
 type Service struct {
 	gorm.Model
-	Identifier   string `gorm:"type:varchar(100) unique"`
-	Title        string
-	Description  string
-	Attributes   string
-	Status       int
-	Organization Organization `gorm:"foreignKey:OrganizationID"`
+	Identifier     string `gorm:"type:varchar(100) unique"`
+	Title          string
+	Description    string
+	Attributes     string
+	Status         int
+	Organization   Organization
+	OrganizationID int
 }
 
 // User model definition of a user
@@ -51,33 +53,36 @@ type User struct {
 	Email          string `gorm:"unique"`
 	HashedPassword []byte `gorm:"type:char(60)"`
 	Active         bool
-	Organizations  []Organization `gorm:"foreignKey:OrganizationID"`
+	Organizations  []Organization `gorm:"many2many:user_organizations;"`
 }
 
 // Attribute model definition of available attributes
 type Attribute struct {
 	gorm.Model
-	Key          string
-	Title        string
-	Active       bool
-	Type         string
-	Values       string
-	Organization Organization `gorm:"foreignKey:OrganizationID"`
+	Key            string
+	Title          string
+	Active         bool
+	Type           string
+	Values         string
+	Organization   Organization
+	OrganizationID int
 }
 
 // Setting model definition of configured settings
 type Setting struct {
 	gorm.Model
-	Key          string
-	Value        string
-	Tier         string
-	Organization Organization `gorm:"foreignKey:OrganizationID"`
+	Key            string
+	Value          string
+	Tier           string
+	Organization   Organization
+	OrganizationID int
 }
 
 // AuditLog model definition of logs
 type AuditLog struct {
 	gorm.Model
-	User         int
-	Message      string
-	Organization Organization `gorm:"foreignKey:OrganizationID"`
+	User           int
+	Message        string
+	Organization   Organization
+	OrganizationID int
 }

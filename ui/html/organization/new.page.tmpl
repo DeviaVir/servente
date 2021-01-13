@@ -1,0 +1,29 @@
+{{template "base" .}}
+
+{{define "title"}}Create new organization{{end}}
+
+{{define "main"}}
+<h2>Create new organization</h2>
+<form action='/organization/new' method='POST'>
+  <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+  {{with .Form}}
+    <div>
+      <label for='identifier'>Identifier:</label>
+      {{with .Errors.Get "identifier"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <input type='text' placeholder='some-organization-name' name='identifier' value='{{.Get "identifier"}}' id='identifier'>
+    </div>
+    <div>
+      <label for='title'>Name:</label>
+      {{with .Errors.Get "name"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <input type='text' placeholder='Some Service Name' name='name' value='{{.Get "name"}}' id='name'>
+    </div>
+    <div>
+      <input type='submit' value='Create Organization'>
+    </div>
+  {{end}}
+</form>
+{{end}}

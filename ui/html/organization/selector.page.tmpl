@@ -1,0 +1,27 @@
+{{template "base" .}}
+
+{{define "title"}}Organization selector{{end}}
+
+{{define "main"}}
+  <h2>Your organizations</h2>
+  <form action='/organization/selector' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    {{with .Form}}
+      <div>
+        <label for='identifier'>Organization:</label>
+        {{with .Errors.Get "identifier"}}
+          <label class='error'>{{.}}</label>
+        {{end}}
+        <select name='identifier' id='identifier'>
+          {{range $.Organizations}}
+          <option value='{{.Identifier}}'>{{.Name}} ({{.Identifier}})</option>
+          {{end}}
+        </select>
+      </div>
+      <div>
+        <input type='submit' value='Save' />
+      </div>
+    {{end}}
+  </form>
+  <p><a href="/organization/new">Create new organization</a></p>
+{{end}}

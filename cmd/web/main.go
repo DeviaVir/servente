@@ -38,6 +38,11 @@ type application struct {
 		Authenticate(string, string) (int, error)
 		Get(int) (*models.User, error)
 		ChangePassword(int, string, string) error
+		Organizations(*models.User) ([]*models.Organization, error)
+	}
+	organizations interface {
+		Insert(*models.User, string, string) (*models.Organization, error)
+		Get(string) (*models.Organization, error)
 	}
 }
 
@@ -59,7 +64,7 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	defer sqlDB.Close()
-	db.AutoMigrate(&models.User{}, &models.Service{}, &models.Attribute{}, &models.Setting{}, &models.AuditLog{})
+	db.AutoMigrate(&models.Organization{}, &models.User{}, &models.Service{}, &models.Attribute{}, &models.Setting{}, &models.AuditLog{})
 
 	templateCache, err := newTemplateCache("./ui/html/")
 	if err != nil {
@@ -77,6 +82,7 @@ func main() {
 		services:      &mysql.ServiceModel{DB: db},
 		templateCache: templateCache,
 		users:         &mysql.UserModel{DB: db},
+		organizations: &mysql.OrganizationModel{DB: db},
 	}
 
 	tlsConfig := &tls.Config{

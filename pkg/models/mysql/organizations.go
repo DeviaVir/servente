@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/DeviaVir/servente/pkg/models"
 
@@ -12,23 +13,35 @@ type OrganizationModel struct {
 	DB *gorm.DB
 }
 
-func (m *OrganizationModel) Insert(identifier, name string) error {
-	organization := models.Organization{Identifier: identifier, Name: name, Active: true}
+func (m *OrganizationModel) Insert(user *models.User, identifier, name string) (*models.Organization, error) {
+	organization := models.Organization{
+		Identifier: identifier,
+		Name:       name,
+		Active:     true,
+	}
+
+	fmt.Println(organization)
 
 	if err := m.DB.Create(&organization).Error; err != nil {
 		if errors.Is(err, gorm.ErrInvalidData) {
-			return models.ErrDuplicateIdentifier
+			return nil, models.ErrDuplicateIdentifier
 		}
-		return err
+		return nil, err
 	}
 
-	return nil
+	if err := m.DB.Model(&user).Association("Organizations").Error; err != nil {
+		return nil, err
+	}
+
+	m.DB.Model(&user).Association("Organizations").Append(&organization)
+
+	return &organization, nil
 }
 
-func (m *OrganizationModel) Get(id int) (*models.Organization, error) {
+func (m *OrganizationModel) Get(id string) (*models.Organization, error) {
 	organization := models.Organization{}
 
-	if err := m.DB.Where("id = ? AND active = ?", id, 1).Select("identifier", "name", "active", "id", "created_at").First(&organization).Error; err != nil {
+	if err := m.DB.Where("identifier = ? AND active = ?", id, 1).Select("identifier", "name", "active", "id", "created_at").First(&organization).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, models.ErrNoRecord
 		}

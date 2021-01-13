@@ -91,3 +91,16 @@ func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) 
 
 	return nil
 }
+
+// Organizations returns organization structs the user is a part of
+func (m *UserModel) Organizations(user *models.User) ([]*models.Organization, error) {
+	organizations := []*models.Organization{}
+
+	if err := m.DB.Model(&user).Association("Organizations").Error; err != nil {
+		return nil, err
+	}
+
+	m.DB.Model(&user).Association("Organizations").Find(&organizations)
+
+	return organizations, nil
+}

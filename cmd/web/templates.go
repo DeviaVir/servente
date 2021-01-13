@@ -20,6 +20,8 @@ type templateData struct {
 	Service         *models.Service
 	Services        []*models.Service
 	User            *models.User
+	Organization    *models.Organization
+	Organizations   []*models.Organization
 }
 
 func humanDate(t time.Time) string {
