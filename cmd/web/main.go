@@ -42,6 +42,7 @@ type application struct {
 	}
 	organizations interface {
 		Insert(*models.User, string, string) (*models.Organization, error)
+		Update(*models.User, *models.Organization, string) (*models.Organization, error)
 		Get(string) (*models.Organization, error)
 	}
 }

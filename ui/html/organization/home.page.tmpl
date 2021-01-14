@@ -6,4 +6,27 @@
   <h2>Organization: {{.Organization.Name}}</h2>
   <p>This is your organization.</p>
   <p><a href="/organization/selector">Switch to a different organization</a></p>
+
+  <form action='/organization/{{.Organization.Identifier}}' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    {{with .Form}}
+      <div>
+        <label for='identifier'>Identifier:</label>
+        {{with .Errors.Get "identifier"}}
+          <label class='error'>{{.}}</label>
+        {{end}}
+        <input type='text' name='identifier' value='{{$.Organization.Identifier}}' id='identifier' readonly>
+      </div>
+      <div>
+        <label for='title'>Name:</label>
+        {{with .Errors.Get "name"}}
+          <label class='error'>{{.}}</label>
+        {{end}}
+        <input type='text' name='name' value='{{$.Organization.Name}}' id='name'>
+      </div>
+      <div>
+        <input type='submit' value='Update Organization'>
+      </div>
+    {{end}}
+  </form>
 {{end}}

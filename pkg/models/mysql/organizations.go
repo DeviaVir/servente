@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/DeviaVir/servente/pkg/models"
 
@@ -20,8 +19,6 @@ func (m *OrganizationModel) Insert(user *models.User, identifier, name string) (
 		Active:     true,
 	}
 
-	fmt.Println(organization)
-
 	if err := m.DB.Create(&organization).Error; err != nil {
 		if errors.Is(err, gorm.ErrInvalidData) {
 			return nil, models.ErrDuplicateIdentifier
@@ -36,6 +33,17 @@ func (m *OrganizationModel) Insert(user *models.User, identifier, name string) (
 	m.DB.Model(&user).Association("Organizations").Append(&organization)
 
 	return &organization, nil
+}
+
+func (m *OrganizationModel) Update(user *models.User, organization *models.Organization, name string) (*models.Organization, error) {
+	if err := m.DB.Save(&organization).Error; err != nil {
+		if errors.Is(err, gorm.ErrInvalidData) {
+			return nil, models.ErrDuplicateIdentifier
+		}
+		return nil, err
+	}
+
+	return organization, nil
 }
 
 func (m *OrganizationModel) Get(id string) (*models.Organization, error) {

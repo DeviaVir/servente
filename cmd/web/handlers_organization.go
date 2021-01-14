@@ -28,16 +28,23 @@ func (app *application) organizationsHomeForm(w http.ResponseWriter, r *http.Req
 
 	app.render(w, r, "organization/home.page.tmpl", &templateData{
 		Organization: o,
+		Form:         forms.New(nil),
 	})
 }
 
 func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request) {
+	userID := app.session.GetInt(r, "authenticatedUserID")
+	user, err := app.users.Get(userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	orgID := r.URL.Query().Get(":id")
 	if orgID == "" {
 		app.notFound(w)
 		return
 	}
-
 	o, err := app.organizations.Get(orgID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -48,8 +55,38 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	if err := r.ParseForm(); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("name", "identifier")
+	form.MaxLength("identifier", 100)
+
+	if !form.Valid() {
+		app.render(w, r, "organization/home.page.tmpl", &templateData{
+			Organization: o,
+			Form:         form,
+		})
+		return
+	}
+
+	org, err := app.organizations.Update(
+		user,
+		o,
+		form.Get("name"),
+	)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.session.Put(r, "flash", "Organization successfully updated!")
+
 	app.render(w, r, "organization/home.page.tmpl", &templateData{
-		Organization: o,
+		Organization: org,
+		Form:         forms.New(nil),
 	})
 }
 
