@@ -24,6 +24,13 @@
         <input type='text' name='name' value='{{$.Organization.Name}}' id='name'>
       </div>
       <div>
+        <label for='title'>Attributes:</label>
+        {{with .Errors.Get "attributes"}}
+          <label class='error'>{{.}}</label>
+        {{end}}
+        <div class="add-input-action">+</div>
+      </div>
+      <div>
         <input type='submit' value='Update Organization'>
       </div>
     {{end}}

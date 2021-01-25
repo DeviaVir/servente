@@ -9,13 +9,12 @@ var mockService = &models.Service{
 	Identifier:  "servente",
 	Title:       "Servente",
 	Description: "A fake service owned by golang...",
-	Attributes:  "",
 	Status:      1,
 }
 
 type ServiceModel struct{}
 
-func (m *ServiceModel) Insert(identifier, title, description, attributes string, status int) (int, error) {
+func (m *ServiceModel) Insert(identifier, title, description string, attributes []*models.Attribute, status int) (int, error) {
 	return 2, nil
 }
 

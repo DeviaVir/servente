@@ -86,7 +86,7 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		form.Get("identifier"),
 		form.Get("title"),
 		form.Get("description"),
-		form.Get("attributes"),
+		nil, // form.Get("attributes")
 		int(status),
 	)
 	if err != nil {

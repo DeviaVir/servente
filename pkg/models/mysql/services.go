@@ -11,7 +11,7 @@ type ServiceModel struct {
 	DB *gorm.DB
 }
 
-func (m *ServiceModel) Insert(identifier, title, description, attributes string, status int) (int, error) {
+func (m *ServiceModel) Insert(identifier, title, description string, attributes []*models.Attribute, status int) (int, error) {
 	service := models.Service{
 		Identifier:  identifier,
 		Title:       title,

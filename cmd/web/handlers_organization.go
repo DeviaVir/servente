@@ -26,6 +26,14 @@ func (app *application) organizationsHomeForm(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	settings, err := app.organizations.GetSettings(o)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	fmt.Println(settings)
+
 	app.render(w, r, "organization/home.page.tmpl", &templateData{
 		Organization: o,
 		Form:         forms.New(nil),

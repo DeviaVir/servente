@@ -58,3 +58,14 @@ func (m *OrganizationModel) Get(id string) (*models.Organization, error) {
 
 	return &organization, nil
 }
+
+func (m *OrganizationModel) GetSettings(organization *models.Organization) ([]*models.Setting, error) {
+	if err := m.DB.Model(&organization).Association("Settings").Error; err != nil {
+		return nil, err
+	}
+
+	var settings []*models.Setting
+	m.DB.Model(&organization).Association("Settings").Find(&settings)
+
+	return settings, nil
+}

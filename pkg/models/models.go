@@ -12,12 +12,12 @@ var (
 	ErrDuplicateEmail      = errors.New("models: duplicate email")
 	ErrDuplicateIdentifier = errors.New("models: duplicate service identifier")
 
-	StatusInDevelopment  = 1
-	StatusBeta           = 2
-	StatusProduction     = 3
-	StatusMaintain       = 4
-	StatusDeprecated     = 5
-	StatusDecommissioned = 6
+	StatusInDevelopment  = 1 // active dev
+	StatusBeta           = 2 // testing
+	StatusProduction     = 3 // prod and active dev
+	StatusMaintain       = 4 // prod no longer developed/extended
+	StatusDeprecated     = 5 // legacy, to be replaced
+	StatusDecommissioned = 6 // it used to be a thing but it's gone now
 
 	TypeLink    = "link"
 	TypeWebhook = "webhook"
@@ -32,6 +32,11 @@ type Organization struct {
 	Identifier string `gorm:"type:varchar(100) unique"`
 	Name       string
 	Active     bool
+	Users      []*User `gorm:"many2many:user_organizations;"`
+	Services   []*Service
+	Settings   []*Setting
+	Attribute  []*Attribute `gorm:"foreignKey:OrganizationID"`
+	AuditLogs  []*AuditLog
 }
 
 // Service model definition of a service
@@ -40,8 +45,8 @@ type Service struct {
 	Identifier     string `gorm:"type:varchar(100) unique"`
 	Title          string
 	Description    string
-	Attributes     string
 	Status         int
+	Attributes     []*Attribute `gorm:"foreignKey:ServiceID"`
 	Organization   Organization
 	OrganizationID int
 }
@@ -53,28 +58,30 @@ type User struct {
 	Email          string `gorm:"unique"`
 	HashedPassword []byte `gorm:"type:char(60)"`
 	Active         bool
-	Organizations  []Organization `gorm:"many2many:user_organizations;"`
+	Organizations  []*Organization `gorm:"many2many:user_organizations;"`
 }
 
 // Attribute model definition of available attributes
 type Attribute struct {
 	gorm.Model
-	Key            string
-	Title          string
+	Value          string
 	Active         bool
-	Type           string
-	Values         string
-	Organization   Organization
+	Setting        Setting
+	SettingID      int
+	Organization   *Organization
 	OrganizationID int
+	Service        *Service
+	ServiceID      int
 }
 
 // Setting model definition of configured settings
 type Setting struct {
 	gorm.Model
-	Key            string
-	Value          string
-	Tier           string
-	Organization   Organization
+	Key            string // unique id
+	Title          string // nice name
+	Type           string // link, webhook, select, etc
+	Scope          string // "organization" or "service"
+	Organization   *Organization
 	OrganizationID int
 }
 
@@ -83,6 +90,6 @@ type AuditLog struct {
 	gorm.Model
 	User           int
 	Message        string
-	Organization   Organization
+	Organization   *Organization
 	OrganizationID int
 }

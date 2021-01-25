@@ -28,7 +28,7 @@ type application struct {
 	infoLog  *log.Logger
 	session  *sessions.Session
 	services interface {
-		Insert(string, string, string, string, int) (int, error)
+		Insert(string, string, string, []*models.Attribute, int) (int, error)
 		Get(int) (*models.Service, error)
 		Latest(int) ([]*models.Service, error)
 	}
@@ -44,6 +44,7 @@ type application struct {
 		Insert(*models.User, string, string) (*models.Organization, error)
 		Update(*models.User, *models.Organization, string) (*models.Organization, error)
 		Get(string) (*models.Organization, error)
+		GetSettings(*models.Organization) ([]*models.Setting, error)
 	}
 }
 
