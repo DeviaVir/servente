@@ -48,3 +48,13 @@ func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) 
 		return models.ErrNoRecord
 	}
 }
+
+func (m *UserModel) Organizations(user *models.User) (orgs []*models.Organization, err error) {
+	orgs = append(orgs, mockOrganization)
+	switch user.ID {
+	case 1:
+		return orgs, nil
+	default:
+		return nil, nil
+	}
+}
