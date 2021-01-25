@@ -4,9 +4,8 @@
 
 {{define "main"}}
   <h2>Organization: {{.Organization.Name}}</h2>
-  <p>This is your organization.</p>
   <p><a href="/organization/selector">Switch to a different organization</a></p>
-
+  <p><br /></p>
   <form action='/organization/{{.Organization.Identifier}}' method='POST'>
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}

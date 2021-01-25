@@ -4,6 +4,8 @@
 
 {{define "main"}}
   <h2>Your organizations</h2>
+  <p><a href="/organization/new">Create new organization</a></p>
+  <p><br /></p>
   <form action='/organization/selector' method='POST'>
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}
@@ -23,5 +25,4 @@
       </div>
     {{end}}
   </form>
-  <p><a href="/organization/new">Create new organization</a></p>
 {{end}}
