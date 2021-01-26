@@ -86,72 +86,6 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// get existing settings, if applicable
-	existingSettings, err := app.organizations.GetSettings(o)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	// store organization settings, attributes carry references so they will have to follow after
-	// initially saving.
-	settingsIdentifiers := r.PostForm["settings[identifier][]"]
-	settingsTypes := r.PostForm["settings[type][]"]
-	settingsValues := r.PostForm["settings[value][]"]
-
-	for i, identifier := range settingsIdentifiers {
-		found := false
-		for ii, setting := range existingSettings {
-			if setting.Key == identifier && setting.Scope == "organization" {
-				found = true
-				setting.Title = identifier
-				setting.Type = settingsTypes[i]
-				setting.Scope = "organization"
-				setting2 := setting
-				existingSettings[ii] = setting2
-			}
-		}
-
-		if !found {
-			setting := &models.Setting{
-				Key:            identifier,
-				Title:          identifier,
-				Type:           settingsTypes[i],
-				Scope:          "organization",
-				OrganizationID: o.ID,
-			}
-
-			existingSettings = append(existingSettings, setting)
-		}
-	}
-	// store service attribute settings
-	attributesIdentifiers := r.PostForm["attributes[identifier][]"]
-	attributesTypes := r.PostForm["attributes[type][]"]
-	for i, identifier := range attributesIdentifiers {
-		found := false
-		for ii, setting := range existingSettings {
-			if identifier == setting.Key && setting.Scope == "service" {
-				found = true
-				existingSettings[ii].Title = identifier
-				existingSettings[ii].Type = attributesTypes[i]
-				existingSettings[ii].Scope = "service"
-			}
-		}
-
-		if !found {
-			setting := &models.Setting{
-				Key:            identifier,
-				Title:          identifier,
-				Type:           attributesTypes[i],
-				Scope:          "service",
-				OrganizationID: o.ID,
-			}
-
-			existingSettings = append(existingSettings, setting)
-		}
-	}
-	o.Settings = existingSettings
-
 	org, err := app.organizations.Update(
 		user,
 		o,
@@ -162,17 +96,69 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// store organization settings, attributes carry references so they will have to follow after
+	// initially saving.
+	settingsIdentifiers := r.PostForm["settings[identifier][]"]
+	settingsTypes := r.PostForm["settings[type][]"]
+	settingsValues := r.PostForm["settings[value][]"]
+	for i, identifier := range settingsIdentifiers {
+		setting := &models.Setting{
+			Key:            identifier,
+			Title:          identifier,
+			Type:           settingsTypes[i],
+			Scope:          "organization",
+			OrganizationID: org.ID,
+		}
+
+		_, err := app.organizations.UpdateSetting(setting)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
+	// store service attribute settings
+	attributesIdentifiers := r.PostForm["attributes[identifier][]"]
+	attributesTypes := r.PostForm["attributes[type][]"]
+	for i, identifier := range attributesIdentifiers {
+		setting := &models.Setting{
+			Key:            identifier,
+			Title:          identifier,
+			Type:           attributesTypes[i],
+			Scope:          "service",
+			OrganizationID: org.ID,
+		}
+
+		_, err := app.organizations.UpdateSetting(setting)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
+
+	// get existing settings now that they have been saved
+	existingSettings, err := app.organizations.GetSettings(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	org.Settings = existingSettings
+
 	// store organization attribute values connected to the
 	// organization settings we created earlier
 	for i, identifier := range settingsIdentifiers {
 		for _, setting := range existingSettings {
 			if setting.Key == identifier && setting.Scope == "organization" {
 				_, err = app.organizations.UpdateAttribute(setting, settingsValues[i])
+				if err != nil {
+					app.serverError(w, err)
+					return
+				}
 			}
 		}
 	}
 
-	existingAttributes, err := app.organizations.GetAttributes(org)
+	// get existing attributes now that they have been saved
+	existingAttributes, err := app.organizations.GetAttributes(o)
 	if err != nil {
 		app.serverError(w, err)
 		return

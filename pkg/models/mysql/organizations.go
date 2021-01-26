@@ -46,26 +46,54 @@ func (m *OrganizationModel) Update(user *models.User, organization *models.Organ
 	return organization, nil
 }
 
+func (m *OrganizationModel) UpdateSetting(updateSetting *models.Setting) (*models.Setting, error) {
+	setting := models.Setting{}
+	found := true
+	if err := m.DB.Where("`key` = ? AND `scope` = ? AND `organization_id` = ?", updateSetting.Key, updateSetting.Scope, updateSetting.OrganizationID).First(&setting).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			found = false
+		} else {
+			return nil, err
+		}
+	}
+
+	if found {
+		setting.Type = updateSetting.Type
+		setting.Scope = updateSetting.Scope
+		setting.Title = updateSetting.Title
+		if err := m.DB.Save(&setting).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		setting = *updateSetting
+		if err := m.DB.Create(&setting).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	return &setting, nil
+}
+
 func (m *OrganizationModel) UpdateAttribute(setting *models.Setting, val string) (*models.OrganizationAttribute, error) {
 	attr := models.OrganizationAttribute{}
 
 	found := true
-	if err := m.DB.Where("setting_id = ? AND organization_id = ?", setting.ID, setting.OrganizationID).Select("value", "active", "id", "created_at").First(&attr).Error; err != nil {
+	if err := m.DB.Where("setting_id = ? AND organization_id = ?", setting.ID, setting.OrganizationID).First(&attr).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			found = false
 			attr = models.OrganizationAttribute{
 				Active:         true,
 				Value:          val,
-				Setting:        *setting,
+				SettingID:      setting.ID,
 				OrganizationID: setting.OrganizationID,
 			}
+		} else {
+			return nil, err
 		}
-		return nil, err
 	}
 
 	if found {
 		attr.Value = val
-		attr.SettingID = setting.ID
-		attr.OrganizationID = setting.OrganizationID
 		if err := m.DB.Save(&attr).Error; err != nil {
 			return nil, err
 		}
@@ -81,7 +109,7 @@ func (m *OrganizationModel) UpdateAttribute(setting *models.Setting, val string)
 func (m *OrganizationModel) Get(id string) (*models.Organization, error) {
 	organization := models.Organization{}
 
-	if err := m.DB.Where("identifier = ? AND active = ?", id, 1).Select("identifier", "name", "active", "id", "created_at").First(&organization).Error; err != nil {
+	if err := m.DB.Where("identifier = ? AND active = ?", id, 1).First(&organization).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, models.ErrNoRecord
 		}

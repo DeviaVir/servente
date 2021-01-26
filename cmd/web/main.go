@@ -16,6 +16,7 @@ import (
 	"github.com/namsral/flag"
 	gormMysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type contextKey string
@@ -44,6 +45,7 @@ type application struct {
 		Insert(*models.User, string, string) (*models.Organization, error)
 		Update(*models.User, *models.Organization, string) (*models.Organization, error)
 		UpdateAttribute(*models.Setting, string) (*models.OrganizationAttribute, error)
+		UpdateSetting(*models.Setting) (*models.Setting, error)
 		Get(string) (*models.Organization, error)
 		GetSettings(*models.Organization) ([]*models.Setting, error)
 		GetAttributes(*models.Organization) ([]*models.OrganizationAttribute, error)
@@ -110,7 +112,9 @@ func main() {
 }
 
 func openDB(dsn string) (*gorm.DB, *sql.DB, error) {
-	db, err := gorm.Open(gormMysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(gormMysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		return nil, nil, err
 	}
