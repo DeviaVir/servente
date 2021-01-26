@@ -313,3 +313,14 @@ footer {
     color: #6A6C6F;
     text-align: center;
 }
+
+/* custom additions */
+.add-input-action {
+  float: right;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+.clear {
+  clear: both;
+}

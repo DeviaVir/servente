@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/DeviaVir/servente/pkg/forms"
@@ -22,6 +23,8 @@ type templateData struct {
 	User            *models.User
 	Organization    *models.Organization
 	Organizations   []*models.Organization
+	SettingsTypes   []string
+	AttributesTypes []string
 }
 
 func humanDate(t time.Time) string {
@@ -32,7 +35,8 @@ func humanDate(t time.Time) string {
 }
 
 var functions = template.FuncMap{
-	"humanDate": humanDate,
+	"humanDate":   humanDate,
+	"StringsJoin": strings.Join,
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {

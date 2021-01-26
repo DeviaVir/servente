@@ -69,12 +69,46 @@ func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 
 	app.session.Put(r, "authenticatedUserID", id)
 
+	// also store the organization
+	if form.Get("organization") != "" {
+		user, err := app.users.Get(id)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		organizations, err := app.users.Organizations(user)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		if len(organizations) < 1 {
+			app.session.Put(r, "flash", "You are not currently part of any organization, please create a new one or request to be invited.")
+			http.Redirect(w, r, "/organization/new", http.StatusSeeOther)
+			return
+		}
+
+		var confirmedOrg *models.Organization
+		for _, org := range organizations {
+			if org.Identifier == form.Get("organization") {
+				confirmedOrg = org
+			}
+		}
+
+		if confirmedOrg == nil {
+			app.session.Put(r, "flash", "That organization does not exist or has not invited you, please select a different one, create a new one or request to be invited.")
+			http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+			return
+		}
+
+		app.session.Put(r, "selectedOrganizationID", confirmedOrg.Identifier)
+	}
+
 	path := app.session.PopString(r, "redirectPathAfterLogin")
 	if path != "" {
 		http.Redirect(w, r, path, http.StatusSeeOther)
 		return
 	}
-	http.Redirect(w, r, "/service/new", http.StatusSeeOther)
+	http.Redirect(w, r, "/services", http.StatusSeeOther)
 }
 
 func (app *application) userLogout(w http.ResponseWriter, r *http.Request) {

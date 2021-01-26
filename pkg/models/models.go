@@ -19,9 +19,8 @@ var (
 	StatusDeprecated     = 5 // legacy, to be replaced
 	StatusDecommissioned = 6 // it used to be a thing but it's gone now
 
-	TypeLink    = "link"
-	TypeWebhook = "webhook"
-	TypeSelect  = "select"
+	AttributesTypes = []string{"link", "webhook", "select"}
+	SettingsTypes   = []string{"team-provider"}
 )
 
 // @NOTE: add new models to web/main.go AutoMigrate to have them automatically created
@@ -42,7 +41,7 @@ type Organization struct {
 // Service model definition of a service
 type Service struct {
 	gorm.Model
-	Identifier     string `gorm:"type:varchar(100) unique"`
+	Identifier     string `gorm:"type:varchar(100)"`
 	Title          string
 	Description    string
 	Status         int

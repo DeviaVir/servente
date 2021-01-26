@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/justinas/nosurf"
+
+	"github.com/DeviaVir/servente/pkg/models"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -39,6 +41,8 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 	td.CurrentYear = time.Now().Year()
 	td.Flash = app.session.PopString(r, "flash")
 	td.IsAuthenticated = app.isAuthenticated(r)
+	td.SettingsTypes = models.SettingsTypes
+	td.AttributesTypes = models.AttributesTypes
 	return td
 }
 
