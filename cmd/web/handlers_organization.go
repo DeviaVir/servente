@@ -26,13 +26,19 @@ func (app *application) organizationsHomeForm(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	settings, err := app.organizations.GetSettings(o)
+	// get existing data, if applicable
+	existingSettings, err := app.organizations.GetSettings(o)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-
-	fmt.Println(settings)
+	o.Settings = existingSettings
+	existingAttributes, err := app.organizations.GetAttributes(o)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	o.OrganizationAttributes = existingAttributes
 
 	app.render(w, r, "organization/home.page.tmpl", &templateData{
 		Organization: o,
@@ -80,6 +86,72 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// get existing settings, if applicable
+	existingSettings, err := app.organizations.GetSettings(o)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// store organization settings, attributes carry references so they will have to follow after
+	// initially saving.
+	settingsIdentifiers := r.PostForm["settings[identifier][]"]
+	settingsTypes := r.PostForm["settings[type][]"]
+	settingsValues := r.PostForm["settings[value][]"]
+
+	for i, identifier := range settingsIdentifiers {
+		found := false
+		for ii, setting := range existingSettings {
+			if setting.Key == identifier && setting.Scope == "organization" {
+				found = true
+				setting.Title = identifier
+				setting.Type = settingsTypes[i]
+				setting.Scope = "organization"
+				setting2 := setting
+				existingSettings[ii] = setting2
+			}
+		}
+
+		if !found {
+			setting := &models.Setting{
+				Key:            identifier,
+				Title:          identifier,
+				Type:           settingsTypes[i],
+				Scope:          "organization",
+				OrganizationID: o.ID,
+			}
+
+			existingSettings = append(existingSettings, setting)
+		}
+	}
+	// store service attribute settings
+	attributesIdentifiers := r.PostForm["attributes[identifier][]"]
+	attributesTypes := r.PostForm["attributes[type][]"]
+	for i, identifier := range attributesIdentifiers {
+		found := false
+		for ii, setting := range existingSettings {
+			if identifier == setting.Key && setting.Scope == "service" {
+				found = true
+				existingSettings[ii].Title = identifier
+				existingSettings[ii].Type = attributesTypes[i]
+				existingSettings[ii].Scope = "service"
+			}
+		}
+
+		if !found {
+			setting := &models.Setting{
+				Key:            identifier,
+				Title:          identifier,
+				Type:           attributesTypes[i],
+				Scope:          "service",
+				OrganizationID: o.ID,
+			}
+
+			existingSettings = append(existingSettings, setting)
+		}
+	}
+	o.Settings = existingSettings
+
 	org, err := app.organizations.Update(
 		user,
 		o,
@@ -89,6 +161,23 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 		app.serverError(w, err)
 		return
 	}
+
+	// store organization attribute values connected to the
+	// organization settings we created earlier
+	for i, identifier := range settingsIdentifiers {
+		for _, setting := range existingSettings {
+			if setting.Key == identifier && setting.Scope == "organization" {
+				_, err = app.organizations.UpdateAttribute(setting, settingsValues[i])
+			}
+		}
+	}
+
+	existingAttributes, err := app.organizations.GetAttributes(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	org.OrganizationAttributes = existingAttributes
 
 	app.session.Put(r, "flash", "Organization successfully updated!")
 

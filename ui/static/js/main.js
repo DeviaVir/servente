@@ -19,13 +19,16 @@ function addField(el){
 				type = container.attributes["attr-name"].nodeValue;
 			}
 
+			var itemContainer = document.createElement("div")
+			itemContainer.className = "clear item"
+
 			var inputIdentifier = document.createElement("input");
 			inputIdentifier.type = "text";
 			inputIdentifier.placeholder = "Identifier";
-			inputIdentifier.name = type + "[identifier][]";
+			inputIdentifier.name = `${type}[identifier][]`;
 
 			var selectType = document.createElement("select");
-			selectType.name = type + "[type][]";
+			selectType.name = `${type}[type][]`;
 
 			var selectedTypes = (type == "settings" ? settings : attributes)
 			for (ii = 0; ii < selectedTypes.length; ii++) {
@@ -35,15 +38,17 @@ function addField(el){
 				selectType.appendChild(option);
 			}
 
-			container.appendChild(inputIdentifier);
+			itemContainer.appendChild(inputIdentifier);
 			if (type == "settings") {
 				var inputValue = document.createElement("input");
 				inputValue.type = "text";
 				inputValue.placeholder = "Value";
-				inputValue.name = type + "[value][]";
-				container.appendChild(inputValue);
+				inputValue.name = `${type}[value][]`;
+				itemContainer.appendChild(inputValue);
 			}
-			container.appendChild(selectType);
+			itemContainer.appendChild(selectType);
+
+			container.appendChild(itemContainer)
 		}
 	}
 }

@@ -28,7 +28,7 @@ type application struct {
 	infoLog  *log.Logger
 	session  *sessions.Session
 	services interface {
-		Insert(string, string, string, []*models.Attribute, int) (int, error)
+		Insert(string, string, string, []*models.ServiceAttribute, int) (int, error)
 		Get(int) (*models.Service, error)
 		Latest(int) ([]*models.Service, error)
 	}
@@ -43,8 +43,10 @@ type application struct {
 	organizations interface {
 		Insert(*models.User, string, string) (*models.Organization, error)
 		Update(*models.User, *models.Organization, string) (*models.Organization, error)
+		UpdateAttribute(*models.Setting, string) (*models.OrganizationAttribute, error)
 		Get(string) (*models.Organization, error)
 		GetSettings(*models.Organization) ([]*models.Setting, error)
+		GetAttributes(*models.Organization) ([]*models.OrganizationAttribute, error)
 	}
 }
 
@@ -66,7 +68,7 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	defer sqlDB.Close()
-	db.AutoMigrate(&models.Organization{}, &models.User{}, &models.Service{}, &models.Attribute{}, &models.Setting{}, &models.AuditLog{})
+	db.AutoMigrate(&models.Organization{}, &models.User{}, &models.Service{}, &models.OrganizationAttribute{}, &models.ServiceAttribute{}, &models.Setting{}, &models.AuditLog{})
 
 	templateCache, err := newTemplateCache("./ui/html/")
 	if err != nil {

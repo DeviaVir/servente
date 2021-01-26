@@ -31,7 +31,25 @@
         {{with .Errors.Get "settings"}}
           <label class='error'>{{.}}</label>
         {{end}}
-        <div class='input-container' attr-name='settings'></div>
+        <div class='input-container' attr-name='settings'>
+          {{range $setting := $.Organization.Settings}}
+            {{if eq $setting.Scope "organization"}}
+          <div class="clear item">
+            <input type="text" placeholder="Identifier" value="{{$setting.Key}}" readonly="readonly" name="settings[identifier][]">
+            {{range $attr := $.Organization.OrganizationAttributes}}
+              {{if eq $attr.SettingID $setting.ID}}
+            <input type="text" placeholder="Value" value="{{$attr.Value}}" name="settings[value][]">
+              {{end}}
+            {{end}}
+            <select name="settings[type][]">
+              {{range $type := $.SettingsTypes}}
+              <option value="{{$type}}"{{if eq $setting.Type $type}} selected{{end}}>{{$type}}</option>
+              {{end}}
+            </select>
+          </div>
+            {{end}}
+          {{end}}
+        </div>
       </div>
       <div class='clear'>
         <div class='add-input-action' onclick='addField(this)'>+</div>
@@ -39,7 +57,20 @@
         {{with .Errors.Get "attributes"}}
           <label class='error'>{{.}}</label>
         {{end}}
-        <div class='input-container' attr-name='attributes'></div>
+        <div class='input-container' attr-name='attributes'>
+          {{range $setting := $.Organization.Settings}}
+            {{if eq $setting.Scope "service"}}
+          <div class="clear item">
+            <input type="text" placeholder="Identifier" value="{{$setting.Key}}" readonly="readonly" name="attributes[identifier][]">
+            <select name="attributes[type][]">
+              {{range $type := $.AttributesTypes}}
+              <option value="{{$type}}"{{if eq $setting.Type $type}} selected{{end}}>{{$type}}</option>
+              {{end}}
+            </select>
+          </div>
+            {{end}}
+          {{end}}
+        </div>
       </div>
       <div>
         <input type='submit' value='Update Organization'>

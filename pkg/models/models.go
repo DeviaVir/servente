@@ -28,26 +28,27 @@ var (
 // Organization model definition for organizations
 type Organization struct {
 	gorm.Model
-	Identifier string `gorm:"type:varchar(100) unique"`
-	Name       string
-	Active     bool
-	Users      []*User `gorm:"many2many:user_organizations;"`
-	Services   []*Service
-	Settings   []*Setting
-	Attribute  []*Attribute `gorm:"foreignKey:OrganizationID"`
-	AuditLogs  []*AuditLog
+	Identifier             string `gorm:"type:varchar(100) unique"`
+	Name                   string
+	Active                 bool
+	Users                  []*User `gorm:"many2many:user_organizations;"`
+	Services               []*Service
+	Settings               []*Setting
+	ServiceAttributes      []*ServiceAttribute
+	OrganizationAttributes []*OrganizationAttribute
+	AuditLogs              []*AuditLog
 }
 
 // Service model definition of a service
 type Service struct {
 	gorm.Model
-	Identifier     string `gorm:"type:varchar(100)"`
-	Title          string
-	Description    string
-	Status         int
-	Attributes     []*Attribute `gorm:"foreignKey:ServiceID"`
-	Organization   Organization
-	OrganizationID int
+	Identifier        string `gorm:"type:varchar(100)"`
+	Title             string
+	Description       string
+	Status            int
+	ServiceAttributes []*ServiceAttribute `gorm:"foreignKey:ServiceID"`
+	Organization      Organization
+	OrganizationID    uint
 }
 
 // User model definition of a user
@@ -60,17 +61,28 @@ type User struct {
 	Organizations  []*Organization `gorm:"many2many:user_organizations;"`
 }
 
-// Attribute model definition of available attributes
-type Attribute struct {
+// ServiceAttribute model definition of attributes connected to services
+type ServiceAttribute struct {
 	gorm.Model
 	Value          string
 	Active         bool
 	Setting        Setting
-	SettingID      int
+	SettingID      uint
 	Organization   *Organization
-	OrganizationID int
+	OrganizationID uint
 	Service        *Service
 	ServiceID      int
+}
+
+// OrganizationAttribute model definition of attributes specifically for organizations
+type OrganizationAttribute struct {
+	gorm.Model
+	Value          string
+	Active         bool
+	Setting        Setting
+	SettingID      uint
+	Organization   *Organization
+	OrganizationID uint
 }
 
 // Setting model definition of configured settings
@@ -81,7 +93,7 @@ type Setting struct {
 	Type           string // link, webhook, select, etc
 	Scope          string // "organization" or "service"
 	Organization   *Organization
-	OrganizationID int
+	OrganizationID uint
 }
 
 // AuditLog model definition of logs
@@ -90,5 +102,5 @@ type AuditLog struct {
 	User           int
 	Message        string
 	Organization   *Organization
-	OrganizationID int
+	OrganizationID uint
 }

@@ -14,7 +14,7 @@ var mockService = &models.Service{
 
 type ServiceModel struct{}
 
-func (m *ServiceModel) Insert(identifier, title, description string, attributes []*models.Attribute, status int) (int, error) {
+func (m *ServiceModel) Insert(identifier, title, description string, attributes []*models.ServiceAttribute, status int) (int, error) {
 	return 2, nil
 }
 

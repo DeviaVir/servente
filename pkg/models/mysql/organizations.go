@@ -46,6 +46,38 @@ func (m *OrganizationModel) Update(user *models.User, organization *models.Organ
 	return organization, nil
 }
 
+func (m *OrganizationModel) UpdateAttribute(setting *models.Setting, val string) (*models.OrganizationAttribute, error) {
+	attr := models.OrganizationAttribute{}
+
+	found := true
+	if err := m.DB.Where("setting_id = ? AND organization_id = ?", setting.ID, setting.OrganizationID).Select("value", "active", "id", "created_at").First(&attr).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			attr = models.OrganizationAttribute{
+				Active:         true,
+				Value:          val,
+				Setting:        *setting,
+				OrganizationID: setting.OrganizationID,
+			}
+		}
+		return nil, err
+	}
+
+	if found {
+		attr.Value = val
+		attr.SettingID = setting.ID
+		attr.OrganizationID = setting.OrganizationID
+		if err := m.DB.Save(&attr).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := m.DB.Create(&attr).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	return &attr, nil
+}
+
 func (m *OrganizationModel) Get(id string) (*models.Organization, error) {
 	organization := models.Organization{}
 
@@ -66,6 +98,17 @@ func (m *OrganizationModel) GetSettings(organization *models.Organization) ([]*m
 
 	var settings []*models.Setting
 	m.DB.Model(&organization).Association("Settings").Find(&settings)
+
+	return settings, nil
+}
+
+func (m *OrganizationModel) GetAttributes(organization *models.Organization) ([]*models.OrganizationAttribute, error) {
+	if err := m.DB.Model(&organization).Association("OrganizationAttributes").Error; err != nil {
+		return nil, err
+	}
+
+	var settings []*models.OrganizationAttribute
+	m.DB.Model(&organization).Association("OrganizationAttributes").Find(&settings)
 
 	return settings, nil
 }
