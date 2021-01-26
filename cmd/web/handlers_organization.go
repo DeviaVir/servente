@@ -54,12 +54,14 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	orgID := r.URL.Query().Get(":id")
-	if orgID == "" {
-		app.notFound(w)
+	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
+	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
+	if selectedOrganizationID == "" {
+		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
+		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
 		return
 	}
-	o, err := app.organizations.Get(orgID)
+	o, err := app.organizations.Get(selectedOrganizationID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)

@@ -11,6 +11,25 @@ import (
 )
 
 func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
+	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
+	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
+	if selectedOrganizationID == "" {
+		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
+		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+		return
+	}
+	o, err := app.organizations.Get(selectedOrganizationID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	fmt.Println(o)
+
 	s, err := app.services.Latest(10)
 	if err != nil {
 		app.serverError(w, err)
@@ -23,6 +42,24 @@ func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
+	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
+	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
+	if selectedOrganizationID == "" {
+		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
+		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+		return
+	}
+	o, err := app.organizations.Get(selectedOrganizationID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	fmt.Println(o)
+
 	s, err := app.services.Latest(10)
 	if err != nil {
 		app.serverError(w, err)
@@ -35,6 +72,24 @@ func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
+	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
+	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
+	if selectedOrganizationID == "" {
+		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
+		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+		return
+	}
+	o, err := app.organizations.Get(selectedOrganizationID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	fmt.Println(o)
+
 	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
@@ -57,10 +112,60 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
+	userID := app.session.GetInt(r, "authenticatedUserID")
+	_, err := app.users.Get(userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
+	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
+	if selectedOrganizationID == "" {
+		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
+		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+		return
+	}
+	o, err := app.organizations.Get(selectedOrganizationID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	fmt.Println(o)
+
 	app.render(w, r, "service/new.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
 func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
+	userID := app.session.GetInt(r, "authenticatedUserID")
+	_, err := app.users.Get(userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
+	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
+	if selectedOrganizationID == "" {
+		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
+		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+		return
+	}
+	o, err := app.organizations.Get(selectedOrganizationID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	fmt.Println(o)
+
 	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
