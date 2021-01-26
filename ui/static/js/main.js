@@ -8,43 +8,60 @@ for (var i = 0; i < navLinks.length; i++) {
 }
 
 function addField(el){
-	const [settings, attributes] = discoverTypes()
+	const [settings, attributes] = discoverTypes();
 
-	console.log(settings)
-	console.log(attributes)
-
-	var parent = el.parentElement
+	var parent = el.parentElement;
 	for (var i = 0; i < parent.childNodes.length; i++) {
 		if (parent.childNodes[i].className !== undefined && parent.childNodes[i].className.indexOf("input-container") > -1) {
-			var container = parent.childNodes[i]
-			var type = "default"
+			var container = parent.childNodes[i];
+			var type = "default";
 			if (container.attributes.length > 0 && container.attributes["attr-name"] !== undefined) {
-				type = container.attributes["attr-name"].nodeValue
+				type = container.attributes["attr-name"].nodeValue;
 			}
 
 			var inputIdentifier = document.createElement("input");
 			inputIdentifier.type = "text";
-			inputIdentifier.name = type + "[identifier][]"
+			inputIdentifier.placeholder = "Identifier";
+			inputIdentifier.name = type + "[identifier][]";
+
+			var selectType = document.createElement("select");
+			selectType.name = type + "[type][]";
+
+			var selectedTypes = (type == "settings" ? settings : attributes)
+			for (ii = 0; ii < selectedTypes.length; ii++) {
+				var option = document.createElement("option");
+				option.value = selectedTypes[ii];
+				option.innerHTML = selectedTypes[ii];
+				selectType.appendChild(option);
+			}
 
 			container.appendChild(inputIdentifier);
+			if (type == "settings") {
+				var inputValue = document.createElement("input");
+				inputValue.type = "text";
+				inputValue.placeholder = "Value";
+				inputValue.name = type + "[value][]";
+				container.appendChild(inputValue);
+			}
+			container.appendChild(selectType);
 		}
 	}
 }
 
 function discoverTypes() {
 	// settings
-	var settings
-	var sTholder = document.getElementById("settingsTypes")
+	var settings;
+	var sTholder = document.getElementById("settingsTypes");
 	if (sTholder !== undefined && sTholder.attributes.length > 0 && sTholder.attributes["value"] !== undefined) {
-		settings = sTholder.attributes["value"].nodeValue.split(",")
+		settings = sTholder.attributes["value"].nodeValue.split(",");
 	}
 
 	// attributes
-	var attributes
-	var aTholder = document.getElementById("attributesTypes")
+	var attributes;
+	var aTholder = document.getElementById("attributesTypes");
 	if (aTholder !== undefined && aTholder.attributes.length > 0 && aTholder.attributes["value"] !== undefined) {
-		attributes = aTholder.attributes["value"].nodeValue.split(",")
+		attributes = aTholder.attributes["value"].nodeValue.split(",");
 	}
 
-	return [settings, attributes]
+	return [settings, attributes];
 }
