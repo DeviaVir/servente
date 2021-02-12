@@ -18,7 +18,7 @@ func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
 		return
 	}
-	o, err := app.organizations.Get(selectedOrganizationID)
+	org, err := app.organizations.Get(selectedOrganizationID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -28,9 +28,7 @@ func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(o)
-
-	s, err := app.services.Latest(10)
+	s, err := app.organizations.GetServices(org, 0, 10)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -49,7 +47,7 @@ func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
 		return
 	}
-	o, err := app.organizations.Get(selectedOrganizationID)
+	org, err := app.organizations.Get(selectedOrganizationID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -58,9 +56,9 @@ func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Println(o)
 
-	s, err := app.services.Latest(10)
+	// @TODO: create new endpoint to also select owning team
+	s, err := app.organizations.GetServices(org, 0, 10)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -79,7 +77,7 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
 		return
 	}
-	o, err := app.organizations.Get(selectedOrganizationID)
+	org, err := app.organizations.Get(selectedOrganizationID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -88,7 +86,6 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Println(o)
 
 	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || id < 1 {
@@ -96,7 +93,7 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := app.services.Get(id)
+	s, err := app.organizations.GetService(org, id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -126,7 +123,7 @@ func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
 		return
 	}
-	o, err := app.organizations.Get(selectedOrganizationID)
+	org, err := app.organizations.Get(selectedOrganizationID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -135,7 +132,9 @@ func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Println(o)
+	fmt.Println(org)
+
+	// @TODO: get service attributes and show in the form
 
 	app.render(w, r, "service/new.page.tmpl", &templateData{Form: forms.New(nil)})
 }
@@ -155,7 +154,7 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
 		return
 	}
-	o, err := app.organizations.Get(selectedOrganizationID)
+	org, err := app.organizations.Get(selectedOrganizationID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -164,7 +163,7 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Println(o)
+	fmt.Println(org)
 
 	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -186,6 +185,8 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+
+	// @TODO: use organizations.UpdateService instead
 
 	id, err := app.services.Insert(
 		form.Get("identifier"),
