@@ -162,14 +162,3 @@ func (m *OrganizationModel) GetService(organization *models.Organization, id int
 
 	return service, nil
 }
-
-func (m *OrganizationModel) GetServiceAttributes(organization *models.Organization) ([]*models.ServiceAttribute, error) {
-	if err := m.DB.Model(&organization).Association("ServiceAttributes").Error; err != nil {
-		return nil, err
-	}
-
-	var settings []*models.ServiceAttribute
-	m.DB.Model(&organization).Association("ServiceAttributes").Find(&settings)
-
-	return settings, nil
-}
