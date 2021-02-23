@@ -132,11 +132,23 @@ func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Println(org)
+	existingSettings, err := app.organizations.GetSettings(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	org.Settings = existingSettings
+	existingAttributes, err := app.organizations.GetAttributes(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	org.OrganizationAttributes = existingAttributes
 
-	// @TODO: get service attributes and show in the form
-
-	app.render(w, r, "service/new.page.tmpl", &templateData{Form: forms.New(nil)})
+	app.render(w, r, "service/new.page.tmpl", &templateData{
+		Form:         forms.New(nil),
+		Organization: org,
+	})
 }
 
 func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {

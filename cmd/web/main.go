@@ -51,6 +51,7 @@ type application struct {
 		GetAttributes(*models.Organization) ([]*models.OrganizationAttribute, error)
 		GetServices(*models.Organization, int, int) ([]*models.Service, error)
 		GetService(*models.Organization, int) (*models.Service, error)
+		GetServiceAttributes(*models.Organization) ([]*models.ServiceAttribute, error)
 	}
 }
 
