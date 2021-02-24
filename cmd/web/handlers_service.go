@@ -33,7 +33,8 @@ func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, r, "service/services.page.tmpl", &templateData{
-		Services: s,
+		Services:     s,
+		Organization: org,
 	})
 }
 
@@ -60,7 +61,8 @@ func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, r, "service/services.page.tmpl", &templateData{
-		Services: s,
+		Services:     s,
+		Organization: org,
 	})
 }
 
@@ -98,7 +100,8 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, r, "service/show.page.tmpl", &templateData{
-		Service: s,
+		Service:      s,
+		Organization: org,
 	})
 }
 
