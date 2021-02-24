@@ -140,25 +140,3 @@ func (m *OrganizationModel) GetAttributes(organization *models.Organization) ([]
 
 	return settings, nil
 }
-
-func (m *OrganizationModel) GetServices(organization *models.Organization, limit, start int) ([]*models.Service, error) {
-	if err := m.DB.Model(&organization).Association("Services").Error; err != nil {
-		return nil, err
-	}
-
-	var services []*models.Service
-	m.DB.Model(&organization).Offset(start).Limit(limit).Order("created_at desc").Association("Services").Find(&services)
-
-	return services, nil
-}
-
-func (m *OrganizationModel) GetService(organization *models.Organization, id int) (*models.Service, error) {
-	if err := m.DB.Model(&organization).Association("Services").Error; err != nil {
-		return nil, err
-	}
-
-	var service *models.Service
-	m.DB.Model(&organization).First(&service, id).Association("Services")
-
-	return service, nil
-}

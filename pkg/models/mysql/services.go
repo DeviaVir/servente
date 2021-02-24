@@ -11,14 +11,17 @@ type ServiceModel struct {
 	DB *gorm.DB
 }
 
-func (m *ServiceModel) Insert(identifier, title, description string, attributes []*models.ServiceAttribute, status int) (int, error) {
+func (m *ServiceModel) Insert(org *models.Organization, identifier, title, description string, attributes []*models.ServiceAttribute, status int) (int, error) {
 	service := models.Service{
 		Identifier:        identifier,
 		Title:             title,
 		Description:       description,
 		ServiceAttributes: attributes,
 		Status:            status,
+		OrganizationID:    org.ID,
 	}
+
+	// @TODO: service identifier already exists for this org?
 
 	if err := m.DB.Create(&service).Error; err != nil {
 		if errors.Is(err, gorm.ErrInvalidData) {
@@ -30,10 +33,10 @@ func (m *ServiceModel) Insert(identifier, title, description string, attributes 
 	return int(service.ID), nil
 }
 
-func (m *ServiceModel) Get(id int) (*models.Service, error) {
+func (m *ServiceModel) Get(org *models.Organization, id int) (*models.Service, error) {
 	service := models.Service{}
 
-	if err := m.DB.Where("id = ?", id, true).First(&service).Error; err != nil {
+	if err := m.DB.Where("id = ?", id, true).Where("organization_id = ?", org.ID).First(&service).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, models.ErrNoRecord
 		}
@@ -43,10 +46,10 @@ func (m *ServiceModel) Get(id int) (*models.Service, error) {
 	return &service, nil
 }
 
-func (m *ServiceModel) Latest(limit int) ([]*models.Service, error) {
+func (m *ServiceModel) Latest(org *models.Organization, start, limit int) ([]*models.Service, error) {
 	services := []*models.Service{}
 
-	if err := m.DB.Limit(limit).Order("created_at desc").Find(&services).Error; err != nil {
+	if err := m.DB.Offset(start).Limit(limit).Where("organization_id = ?", org.ID).Order("created_at desc").Find(&services).Error; err != nil {
 		return nil, err
 	}
 

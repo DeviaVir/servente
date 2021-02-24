@@ -11,15 +11,13 @@ import (
 )
 
 func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
-	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
-	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
-	if selectedOrganizationID == "" {
-		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
-		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
-		return
-	}
-	org, err := app.organizations.Get(selectedOrganizationID)
+	org, _, err := app.addData(w, r)
 	if err != nil {
+		if errors.Is(err, models.ErrNoOrg) {
+			app.session.Put(r, "flash", fmt.Sprintf("%s", err))
+			http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+			return
+		}
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
@@ -28,7 +26,7 @@ func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := app.organizations.GetServices(org, 0, 10)
+	s, err := app.services.Latest(org, 0, 10)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -40,15 +38,13 @@ func (app *application) serviceHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
-	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
-	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
-	if selectedOrganizationID == "" {
-		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
-		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
-		return
-	}
-	org, err := app.organizations.Get(selectedOrganizationID)
+	org, _, err := app.addData(w, r)
 	if err != nil {
+		if errors.Is(err, models.ErrNoOrg) {
+			app.session.Put(r, "flash", fmt.Sprintf("%s", err))
+			http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+			return
+		}
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
@@ -57,8 +53,7 @@ func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// @TODO: create new endpoint to also select owning team
-	s, err := app.organizations.GetServices(org, 0, 10)
+	s, err := app.services.Latest(org, 0, 10)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -70,15 +65,13 @@ func (app *application) serviceHomeYou(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
-	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
-	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
-	if selectedOrganizationID == "" {
-		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
-		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
-		return
-	}
-	org, err := app.organizations.Get(selectedOrganizationID)
+	org, _, err := app.addData(w, r)
 	if err != nil {
+		if errors.Is(err, models.ErrNoOrg) {
+			app.session.Put(r, "flash", fmt.Sprintf("%s", err))
+			http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+			return
+		}
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
@@ -93,7 +86,8 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := app.organizations.GetService(org, id)
+	s, err := app.services.Get(org, id)
+	fmt.Println(s)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -109,22 +103,13 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
-	userID := app.session.GetInt(r, "authenticatedUserID")
-	_, err := app.users.Get(userID)
+	org, _, err := app.addData(w, r)
 	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
-	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
-	if selectedOrganizationID == "" {
-		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
-		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
-		return
-	}
-	org, err := app.organizations.Get(selectedOrganizationID)
-	if err != nil {
+		if errors.Is(err, models.ErrNoOrg) {
+			app.session.Put(r, "flash", fmt.Sprintf("%s", err))
+			http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+			return
+		}
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
@@ -132,18 +117,6 @@ func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	existingSettings, err := app.organizations.GetSettings(org)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	org.Settings = existingSettings
-	existingAttributes, err := app.organizations.GetAttributes(org)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	org.OrganizationAttributes = existingAttributes
 
 	app.render(w, r, "service/new.page.tmpl", &templateData{
 		Form:         forms.New(nil),
@@ -152,22 +125,13 @@ func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
-	userID := app.session.GetInt(r, "authenticatedUserID")
-	_, err := app.users.Get(userID)
+	org, _, err := app.addData(w, r)
 	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
-	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
-	if selectedOrganizationID == "" {
-		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
-		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
-		return
-	}
-	org, err := app.organizations.Get(selectedOrganizationID)
-	if err != nil {
+		if errors.Is(err, models.ErrNoOrg) {
+			app.session.Put(r, "flash", fmt.Sprintf("%s", err))
+			http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+			return
+		}
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
@@ -175,7 +139,6 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Println(org)
 
 	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -198,13 +161,28 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// @TODO: use organizations.UpdateService instead
+	var serviceAttrs []*models.ServiceAttribute
+	for _, setting := range org.Settings {
+		if setting.Scope == "service" {
+			attrs := r.PostForm[fmt.Sprintf("attributes[%s]", setting.Key)]
+			if len(attrs) > 0 {
+				serviceAttr := models.ServiceAttribute{
+					Value:          attrs[0],
+					Active:         true,
+					SettingID:      setting.ID,
+					OrganizationID: org.ID,
+				}
+				serviceAttrs = append(serviceAttrs, &serviceAttr)
+			}
+		}
+	}
 
 	id, err := app.services.Insert(
+		org,
 		form.Get("identifier"),
 		form.Get("title"),
 		form.Get("description"),
-		nil, // form.Get("attributes")
+		serviceAttrs,
 		int(status),
 	)
 	if err != nil {

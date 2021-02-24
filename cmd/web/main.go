@@ -29,9 +29,9 @@ type application struct {
 	infoLog  *log.Logger
 	session  *sessions.Session
 	services interface {
-		Insert(string, string, string, []*models.ServiceAttribute, int) (int, error)
-		Get(int) (*models.Service, error)
-		Latest(int) ([]*models.Service, error)
+		Insert(*models.Organization, string, string, string, []*models.ServiceAttribute, int) (int, error)
+		Get(*models.Organization, int) (*models.Service, error)
+		Latest(*models.Organization, int, int) ([]*models.Service, error)
 	}
 	templateCache map[string]*template.Template
 	users         interface {
@@ -49,8 +49,6 @@ type application struct {
 		Get(string) (*models.Organization, error)
 		GetSettings(*models.Organization) ([]*models.Setting, error)
 		GetAttributes(*models.Organization) ([]*models.OrganizationAttribute, error)
-		GetServices(*models.Organization, int, int) ([]*models.Service, error)
-		GetService(*models.Organization, int) (*models.Service, error)
 	}
 }
 

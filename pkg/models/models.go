@@ -11,6 +11,7 @@ var (
 	ErrInvalidCredentials  = errors.New("models: invalid credentials")
 	ErrDuplicateEmail      = errors.New("models: duplicate email")
 	ErrDuplicateIdentifier = errors.New("models: duplicate service identifier")
+	ErrNoOrg               = errors.New("no organization selected")
 
 	StatusInDevelopment  = 1 // active dev
 	StatusBeta           = 2 // testing

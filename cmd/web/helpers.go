@@ -54,6 +54,52 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 	return isAuthenticated
 }
 
+func (app *application) addData(w http.ResponseWriter, r *http.Request) (*models.Organization, *models.User, error) {
+	// get user object
+	userID := app.session.GetInt(r, "authenticatedUserID")
+	user, err := app.users.Get(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// get selected organization identifier
+	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
+	if selectedOrganizationID == "" {
+		return nil, user, models.ErrNoOrg
+	}
+
+	// get user's organizations
+	orgs, err := app.users.Organizations(user)
+	if err != nil {
+		return nil, user, err
+	}
+	// now find the organization ID we are looking for
+	var org *models.Organization
+	for _, o := range orgs {
+		if o.Identifier == selectedOrganizationID {
+			org = o
+		}
+	}
+	if org == nil {
+		return nil, user, models.ErrNoOrg
+	}
+
+	// grab join tables
+	existingSettings, err := app.organizations.GetSettings(org)
+	if err != nil {
+		return nil, user, err
+	}
+	org.Settings = existingSettings
+	existingAttributes, err := app.organizations.GetAttributes(org)
+	if err != nil {
+		return nil, user, err
+	}
+	org.OrganizationAttributes = existingAttributes
+
+	// return!
+	return org, user, nil
+}
+
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {
 	ts, ok := app.templateCache[name]
 	if !ok {

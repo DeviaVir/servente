@@ -47,22 +47,13 @@ func (app *application) organizationsHomeForm(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request) {
-	userID := app.session.GetInt(r, "authenticatedUserID")
-	user, err := app.users.Get(userID)
+	org, user, err := app.addData(w, r)
 	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	selectedOrganizationID := app.session.GetString(r, "selectedOrganizationID")
-	// user part of an organization, but an organization is not yet selected, redirect to selecting an organization
-	if selectedOrganizationID == "" {
-		app.session.Put(r, "flash", "No organization selected, please select an existing one or create a new organization.")
-		http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
-		return
-	}
-	o, err := app.organizations.Get(selectedOrganizationID)
-	if err != nil {
+		if errors.Is(err, models.ErrNoOrg) {
+			app.session.Put(r, "flash", fmt.Sprintf("%s", err))
+			http.Redirect(w, r, "/organization/selector", http.StatusSeeOther)
+			return
+		}
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
@@ -82,15 +73,15 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 
 	if !form.Valid() {
 		app.render(w, r, "organization/home.page.tmpl", &templateData{
-			Organization: o,
+			Organization: org,
 			Form:         form,
 		})
 		return
 	}
 
-	org, err := app.organizations.Update(
+	updatedOrg, err := app.organizations.Update(
 		user,
-		o,
+		org,
 		form.Get("name"),
 	)
 	if err != nil {
@@ -109,7 +100,7 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 			Title:          identifier,
 			Type:           settingsTypes[i],
 			Scope:          "organization",
-			OrganizationID: org.ID,
+			OrganizationID: updatedOrg.ID,
 		}
 
 		_, err := app.organizations.UpdateSetting(setting)
@@ -127,7 +118,7 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 			Title:          identifier,
 			Type:           attributesTypes[i],
 			Scope:          "service",
-			OrganizationID: org.ID,
+			OrganizationID: updatedOrg.ID,
 		}
 
 		_, err := app.organizations.UpdateSetting(setting)
@@ -143,7 +134,7 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 		app.serverError(w, err)
 		return
 	}
-	org.Settings = existingSettings
+	updatedOrg.Settings = existingSettings
 
 	// store organization attribute values connected to the
 	// organization settings we created earlier
@@ -160,17 +151,17 @@ func (app *application) organizationsHome(w http.ResponseWriter, r *http.Request
 	}
 
 	// get existing attributes now that they have been saved
-	existingAttributes, err := app.organizations.GetAttributes(o)
+	existingAttributes, err := app.organizations.GetAttributes(org)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	org.OrganizationAttributes = existingAttributes
+	updatedOrg.OrganizationAttributes = existingAttributes
 
 	app.session.Put(r, "flash", "Organization successfully updated!")
 
 	app.render(w, r, "organization/home.page.tmpl", &templateData{
-		Organization: org,
+		Organization: updatedOrg,
 		Form:         forms.New(nil),
 	})
 }
