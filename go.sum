@@ -1,3 +1,5 @@
+github.com/DeviaVir/servente-sdk v0.0.0-20201221153318-d01441b6fc39 h1:mrkxg5pQE6UsFOsL7Uufa8sm2pGJv7c0vIuVp0zcz1U=
+github.com/DeviaVir/servente-sdk v0.0.0-20201221153318-d01441b6fc39/go.mod h1:02BsoWMVjl4dTt9ipok2TbA1NJqGJ2IjfuNp3aYz7r0=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40 h1:y4B3+GPxKlrigF1ha5FFErxK+sr6sWxQovRMzwMhejo=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=

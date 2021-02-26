@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	sdk "github.com/DeviaVir/servente-sdk"
 	"github.com/DeviaVir/servente/pkg/forms"
 	"github.com/DeviaVir/servente/pkg/models"
 )
@@ -25,6 +26,7 @@ type templateData struct {
 	Organizations   []*models.Organization
 	SettingsTypes   []string
 	AttributesTypes []string
+	Teams           []sdk.JSONTeam
 }
 
 func humanDate(t time.Time) string {

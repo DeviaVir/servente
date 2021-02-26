@@ -9,7 +9,9 @@ import (
 
 	"github.com/justinas/nosurf"
 
+	sdk "github.com/DeviaVir/servente-sdk"
 	"github.com/DeviaVir/servente/pkg/models"
+	"github.com/DeviaVir/servente/pkg/owners"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -77,27 +79,36 @@ func (app *application) addData(w http.ResponseWriter, r *http.Request) (*models
 	var org *models.Organization
 	for _, o := range orgs {
 		if o.Identifier == selectedOrganizationID {
-			org = o
+			org, err = app.organizations.Get(o.Identifier)
+			if err != nil {
+				return nil, user, err
+			}
 		}
 	}
 	if org == nil {
 		return nil, user, models.ErrNoOrg
 	}
 
-	// grab join tables
-	existingSettings, err := app.organizations.GetSettings(org)
-	if err != nil {
-		return nil, user, err
-	}
-	org.Settings = existingSettings
-	existingAttributes, err := app.organizations.GetAttributes(org)
-	if err != nil {
-		return nil, user, err
-	}
-	org.OrganizationAttributes = existingAttributes
-
 	// return!
 	return org, user, nil
+}
+
+func (app *application) getOwnerTeams(org *models.Organization) ([]sdk.JSONTeam, error) {
+	api, err := owners.Init(org)
+	if err != nil {
+		return nil, err // no endpoints discovered
+	}
+
+	return api.GetTeamsList()
+}
+
+func (app *application) userPartOfOwnerTeams(org *models.Organization, user *models.User) ([]sdk.JSONTeam, error) {
+	api, err := owners.Init(org)
+	if err != nil {
+		return nil, err // no endpoints discovered
+	}
+
+	return api.UserPartOfTeams(user)
 }
 
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {

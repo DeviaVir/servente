@@ -26,20 +26,6 @@ func (app *application) organizationsHomeForm(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// get existing data, if applicable
-	existingSettings, err := app.organizations.GetSettings(o)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	o.Settings = existingSettings
-	existingAttributes, err := app.organizations.GetAttributes(o)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	o.OrganizationAttributes = existingAttributes
-
 	app.render(w, r, "organization/home.page.tmpl", &templateData{
 		Organization: o,
 		Form:         forms.New(nil),

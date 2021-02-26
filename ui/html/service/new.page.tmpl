@@ -28,6 +28,17 @@
       <textarea placeholder='Target audience, relevant time frames and other information about some service name' name='description' id='description'>{{.Get "description"}}</textarea>
     </div>
     <div>
+      <label for='owner'>Owning team</label>
+      {{with .Errors.Get "owner"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <select name='owner' id='owner'>
+        {{range $team := $.Teams}}
+        <option value='{{$team.Email}}'>{{$team.Name}} ({{$team.Email}})</option>
+        {{end}}
+      </select>
+    </div>
+    <div>
       <label>Attributes</label>
       {{with .Errors.Get "attributes"}}
         <label class='error'>{{.}}</label>

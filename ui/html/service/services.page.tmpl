@@ -10,13 +10,13 @@
       <tr>
         <th>Title</th>
         <th>Created</th>
-        <th>ID</th>
+        <th>Owner</th>
       </tr>
       {{range .Services}}
       <tr>
         <td><a href='/service/{{.ID}}'>{{.Title}}</a></td>
         <td>{{.CreatedAt | humanDate}}</td>
-        <td>#{{.ID}}</td>
+        <td>{{.Owner}}</td>
       </tr>
       {{end}}
     </table>

@@ -29,7 +29,7 @@ type application struct {
 	infoLog  *log.Logger
 	session  *sessions.Session
 	services interface {
-		Insert(*models.Organization, string, string, string, []*models.ServiceAttribute, int) (int, error)
+		Insert(*models.Organization, string, string, string, []*models.ServiceAttribute, int, string) (int, error)
 		Get(*models.Organization, int) (*models.Service, error)
 		Latest(*models.Organization, int, int) ([]*models.Service, error)
 		Update(*models.Service) (int, error)

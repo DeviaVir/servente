@@ -11,11 +11,12 @@ type ServiceModel struct {
 	DB *gorm.DB
 }
 
-func (m *ServiceModel) Insert(org *models.Organization, identifier, title, description string, attributes []*models.ServiceAttribute, status int) (int, error) {
+func (m *ServiceModel) Insert(org *models.Organization, identifier, title, description string, attributes []*models.ServiceAttribute, status int, owner string) (int, error) {
 	service := models.Service{
 		Identifier:        identifier,
 		Title:             title,
 		Description:       description,
+		Owner:             owner,
 		ServiceAttributes: attributes,
 		Status:            status,
 		OrganizationID:    org.ID,

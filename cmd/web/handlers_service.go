@@ -89,7 +89,6 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s, err := app.services.Get(org, id)
-	fmt.Println(s)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -99,13 +98,22 @@ func (app *application) serviceShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get owner data
+	teams, err := app.getOwnerTeams(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	app.render(w, r, "service/show.page.tmpl", &templateData{
 		Service:      s,
 		Organization: org,
+		Teams:        teams,
 	})
 }
 
 func (app *application) serviceEditForm(w http.ResponseWriter, r *http.Request) {
+	// Get org data (and user)
 	org, _, err := app.addData(w, r)
 	if err != nil {
 		if errors.Is(err, models.ErrNoOrg) {
@@ -121,14 +129,13 @@ func (app *application) serviceEditForm(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Get service data
 	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
 	}
-
 	s, err := app.services.Get(org, id)
-	fmt.Println(s)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -138,10 +145,18 @@ func (app *application) serviceEditForm(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Get owner data
+	teams, err := app.getOwnerTeams(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	app.render(w, r, "service/edit.page.tmpl", &templateData{
 		Form:         forms.New(nil),
 		Organization: org,
 		Service:      s,
+		Teams:        teams,
 	})
 }
 
@@ -168,13 +183,19 @@ func (app *application) serviceEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s, err := app.services.Get(org, id)
-	fmt.Println(s)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
 			app.serverError(w, err)
 		}
+		return
+	}
+
+	// Get owner data
+	teams, err := app.getOwnerTeams(org)
+	if err != nil {
+		app.serverError(w, err)
 		return
 	}
 
@@ -188,7 +209,7 @@ func (app *application) serviceEdit(w http.ResponseWriter, r *http.Request) {
 	form.PermittedValues("status", "1", "2", "3", "4", "5", "6")
 
 	if !form.Valid() {
-		app.render(w, r, "service/edit.page.tmpl", &templateData{Form: form, Organization: org, Service: s})
+		app.render(w, r, "service/edit.page.tmpl", &templateData{Form: form, Organization: org, Service: s, Teams: teams})
 		return
 	}
 
@@ -228,6 +249,7 @@ func (app *application) serviceEdit(w http.ResponseWriter, r *http.Request) {
 	s.Description = form.Get("description")
 	s.ServiceAttributes = serviceAttrs
 	s.Status = int(status)
+	s.Owner = form.Get("owner")
 
 	id, err = app.services.Update(s)
 	if err != nil {
@@ -256,9 +278,17 @@ func (app *application) serviceNewForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get owner data
+	teams, err := app.getOwnerTeams(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	app.render(w, r, "service/new.page.tmpl", &templateData{
 		Form:         forms.New(nil),
 		Organization: org,
+		Teams:        teams,
 	})
 }
 
@@ -278,6 +308,13 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get owner data
+	teams, err := app.getOwnerTeams(org)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -289,7 +326,7 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 	form.PermittedValues("status", "1", "2", "3", "4", "5", "6")
 
 	if !form.Valid() {
-		app.render(w, r, "service/new.page.tmpl", &templateData{Form: form, Organization: org})
+		app.render(w, r, "service/new.page.tmpl", &templateData{Form: form, Organization: org, Teams: teams})
 		return
 	}
 
@@ -322,6 +359,7 @@ func (app *application) serviceNew(w http.ResponseWriter, r *http.Request) {
 		form.Get("description"),
 		serviceAttrs,
 		int(status),
+		form.Get("owner"),
 	)
 	if err != nil {
 		app.serverError(w, err)

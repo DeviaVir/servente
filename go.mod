@@ -3,6 +3,7 @@ module github.com/DeviaVir/servente
 go 1.15
 
 require (
+	github.com/DeviaVir/servente-sdk v0.0.0-20201221153318-d01441b6fc39
 	github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40
 	github.com/golangcollege/sessions v1.2.0
 	github.com/justinas/alice v1.2.0

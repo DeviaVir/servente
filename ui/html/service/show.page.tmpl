@@ -11,6 +11,14 @@
       <span>#{{.Identifier}}</span>
     </div>
     <pre><code>{{.Description}}</code></pre>
+    <div class='attr'>
+      <strong>Owning team</strong>
+      {{range $team := $.Teams}}
+        {{if eq $team.Email $.Service.Owner}}
+      <span>{{$team.Name}} ({{$team.Email}})</span>
+        {{end}}
+      {{end}}
+    </div>
     {{range $attr := .ServiceAttributes}}
     <div class='attr'>
       <strong>{{$attr.Setting.Key}}</strong>

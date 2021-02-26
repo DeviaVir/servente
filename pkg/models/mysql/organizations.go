@@ -116,6 +116,25 @@ func (m *OrganizationModel) Get(id string) (*models.Organization, error) {
 		return nil, err
 	}
 
+	settings, err := m.GetSettings(&organization)
+	if err != nil {
+		return nil, err
+	}
+	organization.Settings = settings
+	attributes, err := m.GetAttributes(&organization)
+	if err != nil {
+		return nil, err
+	}
+	organization.OrganizationAttributes = attributes
+	for i, attr := range organization.OrganizationAttributes {
+		if err := m.DB.Model(&attr).Association("Setting").Error; err != nil {
+			return nil, err
+		}
+		var setting models.Setting
+		m.DB.Model(&attr).Association("Setting").Find(&setting)
+		organization.OrganizationAttributes[i].Setting = setting
+	}
+
 	return &organization, nil
 }
 

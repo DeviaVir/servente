@@ -46,6 +46,7 @@ type Service struct {
 	Identifier        string `gorm:"type:varchar(100)"`
 	Title             string
 	Description       string
+	Owner             string
 	Status            int
 	ServiceAttributes []*ServiceAttribute `gorm:"foreignKey:ServiceID"`
 	Organization      Organization
