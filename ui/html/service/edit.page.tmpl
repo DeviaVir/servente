@@ -31,7 +31,7 @@
       {{end}}
       <select name='owner' id='owner'>
         {{range $team := $.Teams}}
-        <option value='{{$team.Email}}'{{if eq $team.Email $.Service.Owner}} checked{{end}}>{{$team.Name}} ({{$team.Email}})</option>
+        <option value='{{$team.Email}}'{{if eq $team.Email $.Service.Owner}} selected{{end}}>{{$team.Name}} ({{$team.Email}})</option>
         {{end}}
       </select>
     </div>
@@ -66,12 +66,12 @@
         <label class='error'>{{.}}</label>
       {{end}}
       <select name='status' id='status'>
-        <option value='1'{{if eq $.Service.Status 1}} checked{{end}}>In Development</option>
-        <option value='2'{{if eq $.Service.Status 2}} checked{{end}}>Beta</option>
-        <option value='3'{{if eq $.Service.Status 3}} checked{{end}}>Production</option>
-        <option value='4'{{if eq $.Service.Status 4}} checked{{end}}>Maintain</option>
-        <option value='5'{{if eq $.Service.Status 5}} checked{{end}}>Deprecated</option>
-        <option value='6'{{if eq $.Service.Status 6}} checked{{end}}>Decommissioned</option>
+        <option value='1'{{if eq $.Service.Status 1}} selected{{end}}>In Development</option>
+        <option value='2'{{if eq $.Service.Status 2}} selected{{end}}>Beta</option>
+        <option value='3'{{if eq $.Service.Status 3}} selected{{end}}>Production</option>
+        <option value='4'{{if eq $.Service.Status 4}} selected{{end}}>Maintain</option>
+        <option value='5'{{if eq $.Service.Status 5}} selected{{end}}>Deprecated</option>
+        <option value='6'{{if eq $.Service.Status 6}} selected{{end}}>Decommissioned</option>
       </select>
     </div>
     <div>
