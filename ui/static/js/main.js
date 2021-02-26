@@ -5,6 +5,11 @@ for (var i = 0; i < navLinks.length; i++) {
 		link.classList.add("live");
 		break;
 	}
+	// services <=> service (hackish)
+	if (link.getAttribute('href').split("/")[1] == "services" && window.location.pathname.split("/")[1] == "service") {
+		link.classList.add("live");
+		break;
+	}
 }
 
 function addField(el){

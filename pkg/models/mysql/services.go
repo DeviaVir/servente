@@ -21,12 +21,24 @@ func (m *ServiceModel) Insert(org *models.Organization, identifier, title, descr
 		OrganizationID:    org.ID,
 	}
 
-	// @TODO: service identifier already exists for this org?
+	// service identifier already exists for this org?
+	var existingServices []*models.Service
+	if result := m.DB.Where("identifier = ?", identifier).Where("organization_id = ?", org.ID).Find(&existingServices); result.RowsAffected > 0 {
+		return 0, models.ErrDuplicateIdentifier
+	}
 
 	if err := m.DB.Create(&service).Error; err != nil {
 		if errors.Is(err, gorm.ErrInvalidData) {
 			return 0, models.ErrDuplicateIdentifier
 		}
+		return 0, err
+	}
+
+	return int(service.ID), nil
+}
+
+func (m *ServiceModel) Update(service *models.Service) (int, error) {
+	if err := m.DB.Save(&service).Error; err != nil {
 		return 0, err
 	}
 
@@ -41,6 +53,22 @@ func (m *ServiceModel) Get(org *models.Organization, id int) (*models.Service, e
 			return nil, models.ErrNoRecord
 		}
 		return nil, err
+	}
+
+	if err := m.DB.Model(&service).Association("ServiceAttributes").Error; err != nil {
+		return nil, err
+	}
+	var attributes []*models.ServiceAttribute
+	m.DB.Model(&service).Association("ServiceAttributes").Find(&attributes)
+	service.ServiceAttributes = attributes
+
+	for i, attr := range service.ServiceAttributes {
+		if err := m.DB.Model(&attr).Association("Setting").Error; err != nil {
+			return nil, err
+		}
+		var setting models.Setting
+		m.DB.Model(&attr).Association("Setting").Find(&setting)
+		service.ServiceAttributes[i].Setting = setting
 	}
 
 	return &service, nil

@@ -32,6 +32,7 @@ type application struct {
 		Insert(*models.Organization, string, string, string, []*models.ServiceAttribute, int) (int, error)
 		Get(*models.Organization, int) (*models.Service, error)
 		Latest(*models.Organization, int, int) ([]*models.Service, error)
+		Update(*models.Service) (int, error)
 	}
 	templateCache map[string]*template.Template
 	users         interface {

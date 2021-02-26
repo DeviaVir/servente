@@ -18,6 +18,10 @@ func (m *ServiceModel) Insert(org *models.Organization, identifier, title, descr
 	return 2, nil
 }
 
+func (m *ServiceModel) Update(service *models.Service) (int, error) {
+	return 2, nil
+}
+
 func (m *ServiceModel) Get(org *models.Organization, id int) (*models.Service, error) {
 	switch id {
 	case 1:

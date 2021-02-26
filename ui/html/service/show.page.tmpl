@@ -4,16 +4,28 @@
 
 {{define "main"}}
   {{with .Service}}
+  <p class="text-right"><a href='/service/edit/{{.ID}}'>Edit service {{.Title}}</a></p>
   <div class='service'>
     <div class='metadata'>
       <strong>{{.Title}}</strong>
       <span>#{{.Identifier}}</span>
     </div>
     <pre><code>{{.Description}}</code></pre>
+    {{range $attr := .ServiceAttributes}}
+    <div class='attr'>
+      <strong>{{$attr.Setting.Key}}</strong>
+      {{if eq $attr.Setting.Type "link"}}
+      <span><a href="{{$attr.Value}}" target="_blank">{{$attr.Value}}</a></span>
+      {{else}}
+      <span>{{$attr.Value}}</span>
+      {{end}}
+    </div>
+    {{end}}
     <div class='metadata'>
       <time>Created: {{.CreatedAt | humanDate}}</time>
       <time>Updated: {{.UpdatedAt | humanDate}}</time>
     </div>
   </div>
+  <p class="text-right"><a href='/service/edit/{{.ID}}'>Edit service {{.Title}}</a></p>
   {{end}}
 {{end}}

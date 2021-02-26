@@ -234,18 +234,21 @@ button:hover {
     border-bottom: 1px solid #E4E5E7;
 }
 
-.service .metadata {
+.service .metadata,
+.service .attr {
     background-color: #F7F9FA;
     color: #6A6C6F;
     padding: 0.75em 18px;
     overflow: auto;
 }
 
-.service .metadata span {
+.service .metadata span,
+.service .attr span {
     float: right;
 }
 
-.service .metadata strong {
+.service .metadata strong,
+.service .attr strong {
     color: #34495E;
 }
 
@@ -259,6 +262,12 @@ button:hover {
 
 .service .metadata time:last-child {
     float: right;
+}
+
+.service .attr {
+    background-color: #FFFFFF;
+    border-top: 1px solid #E4E5E7;
+    border-bottom: 1px solid #E4E5E7;
 }
 
 div.flash {
@@ -323,4 +332,8 @@ footer {
 
 .clear {
   clear: both;
+}
+
+.text-right {
+  text-align: right;
 }

@@ -20,7 +20,9 @@ func (app *application) routes() http.Handler {
 	mux.Get("/services/you", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceHomeYou))
 	mux.Get("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceNewForm))
 	mux.Post("/service/new", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceNew))
-	mux.Get("/service/:id", dynamicMiddleware.ThenFunc(app.serviceShow))
+	mux.Get("/service/:id", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceShow))
+	mux.Get("/service/edit/:id", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceEditForm))
+	mux.Post("/service/edit/:id", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.serviceEdit))
 
 	// Organization settings
 	mux.Get("/organization/start", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.organizationStart))

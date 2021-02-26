@@ -1,0 +1,71 @@
+{{template "base" .}}
+
+{{define "title"}}Edit service {{.Service.Title}}{{end}}
+
+{{define "main"}}
+<form action='/service/edit/{{.Service.ID}}' method='POST'>
+  <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+  {{with .Form}}
+    <div>
+      <label for='identifier'>Identifier:</label>
+      <input type='text' readonly='readonly' name='identifier' value='{{$.Service.Identifier}}' id='identifier'>
+    </div>
+    <div>
+      <label for='title'>Title:</label>
+      {{with .Errors.Get "title"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <input type='text' name='title' value='{{$.Service.Title}}' id='title'>
+    </div>
+    <div>
+      <label for='description'>Description:</label>
+      {{with .Errors.Get "description"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <textarea name='description' id='description'>{{$.Service.Description}}</textarea>
+    </div>
+    <div>
+      <label>Attributes</label>
+      {{with .Errors.Get "attributes"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <div class='input-container' attr-name='attributes'>
+        {{range $setting := $.Organization.Settings}}
+          {{if eq $setting.Scope "service"}}
+        <label for='service-{{$setting.Key}}'>{{$setting.Key}}</label>
+        <div class="clear item">
+          {{ $detected := "no" }}
+          {{range $attr := $.Service.ServiceAttributes}}
+            {{if eq $attr.Setting.Key $setting.Key}}
+              {{ $detected = "yes" }}
+          <input type="text" name="attributes[{{$setting.Key}}]" value="{{$attr.Value}}">
+            {{end}}
+          {{end}}
+          {{if eq $detected "no"}}
+          <input type="text" placeholder="{{$setting.Type}}" name="attributes[{{$setting.Key}}]">
+          {{end}}
+        </div>
+          {{end}}
+        {{end}}
+      </div>
+    </div>
+    <div>
+      <label for='status'>Status:</label>
+      {{with .Errors.Get "status"}}
+        <label class='error'>{{.}}</label>
+      {{end}}
+      <select name='status' id='status'>
+        <option value='1'{{if eq $.Service.Status 1}} checked{{end}}>In Development</option>
+        <option value='2'{{if eq $.Service.Status 2}} checked{{end}}>Beta</option>
+        <option value='3'{{if eq $.Service.Status 3}} checked{{end}}>Production</option>
+        <option value='4'{{if eq $.Service.Status 4}} checked{{end}}>Maintain</option>
+        <option value='5'{{if eq $.Service.Status 5}} checked{{end}}>Deprecated</option>
+        <option value='6'{{if eq $.Service.Status 6}} checked{{end}}>Decommissioned</option>
+      </select>
+    </div>
+    <div>
+      <input type='submit' value='Save changes to {{$.Service.Identifier}}'>
+    </div>
+  {{end}}
+</form>
+{{end}}
