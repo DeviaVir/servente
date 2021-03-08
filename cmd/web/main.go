@@ -3,10 +3,12 @@ package main
 import (
 	"crypto/tls"
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/DeviaVir/servente/pkg/models"
@@ -56,7 +58,7 @@ type application struct {
 func main() {
 	debug := flag.Bool("debug", false, "Enable debug stack traces shown to users")
 	addr := flag.String("addr", ":4000", "HTTP Network Address")
-	dsn := flag.String("dsn", "servente:servente@/servente?charset=utf8mb4&parseTime=true", "MySQL data source name")
+	dsn := flag.String("dsn", "servente:servente@/servente", "MySQL data source name")
 	secret := flag.String("secret", "s6ndh+pPbnzHbS*+9Pk8qGWhtzbpa!ge", "Cookie secret key")
 	sessionLifetimeHours := flag.Int("session-lifetime-hours", 12, "Session cookie lifetime")
 	tlsCertPath := flag.String("tls-cert-path", "./tls/cert.pem", "TLS certificate path")
@@ -113,6 +115,23 @@ func main() {
 }
 
 func openDB(dsn string) (*gorm.DB, *sql.DB, error) {
+	// check if DSN contains parseTime=true (we expect it)
+	if !strings.Contains(dsn, "parseTime=true") {
+		if strings.Contains(dsn, "?") {
+			dsn = fmt.Sprintf("%s&%s", dsn, "parseTime=true")
+		} else {
+			dsn = fmt.Sprintf("%s?%s", dsn, "parseTime=true")
+		}
+	}
+	// check if DSN contains charset=utf8mb4 (we expect it)
+	if !strings.Contains(dsn, "charset=utf8mb4") {
+		if strings.Contains(dsn, "?") {
+			dsn = fmt.Sprintf("%s&%s", dsn, "charset=utf8mb4")
+		} else {
+			dsn = fmt.Sprintf("%s?%s", dsn, "charset=utf8mb4")
+		}
+	}
+
 	db, err := gorm.Open(gormMysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
