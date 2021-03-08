@@ -11,4 +11,5 @@ RUN go build -o /go/bin/ ./...
 # Now copy it into our base image.
 FROM gcr.io/distroless/base-debian10
 COPY --from=build /go/bin/web /
+COPY --from=build /go/src/app/ui /ui
 CMD ["/web"]
