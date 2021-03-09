@@ -1,11 +1,17 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
+	"math/big"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -94,9 +100,24 @@ func main() {
 		organizations: &mysql.OrganizationModel{DB: db},
 	}
 
-	tlsConfig := &tls.Config{
-		PreferServerCipherSuites: true,
-		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
+	var tlsConfig *tls.Config
+	if fileExists(*tlsCertPath) && fileExists(*tlsKeyPath) {
+		cert, err := tls.LoadX509KeyPair(*tlsCertPath, *tlsKeyPath)
+		if err != nil {
+			errorLog.Fatal(err)
+		}
+
+		tlsConfig = &tls.Config{
+			PreferServerCipherSuites: true,
+			CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
+			Certificates:             []tls.Certificate{cert},
+		}
+	} else {
+		infoLog.Printf("No TLS certs found, generating self-signed certs.")
+		tlsConfig, err = generateTLSCerts()
+		if err != nil {
+			errorLog.Fatal(err)
+		}
 	}
 
 	srv := &http.Server{
@@ -110,7 +131,7 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err = srv.ListenAndServeTLS(*tlsCertPath, *tlsKeyPath)
+	err = srv.ListenAndServeTLS("", "")
 	errorLog.Fatal(err)
 }
 
@@ -149,4 +170,91 @@ func openDB(dsn string) (*gorm.DB, *sql.DB, error) {
 	}
 
 	return db, sqlDB, nil
+}
+
+func generateTLSCerts() (*tls.Config, error) {
+	netInterfaces, err := net.Interfaces()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to load net interfaces: %v", err)
+	}
+
+	var ipAddress *net.IP
+
+	for _, netInterface := range netInterfaces {
+		ipAddresses, err := netInterface.Addrs()
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to load addresses for net interface: %v", err)
+		}
+
+		for _, addr := range ipAddresses {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ipAddress = &v.IP
+			case *net.IPAddr:
+				ipAddress = &v.IP
+			}
+
+			if ipAddress != nil {
+				break
+			}
+		}
+
+		if ipAddress != nil {
+			break
+		}
+	}
+
+	if ipAddress == nil {
+		return nil, fmt.Errorf("failed to discover IP address")
+	}
+
+	issuer := pkix.Name{CommonName: ipAddress.String()}
+
+	caCertificate := &x509.Certificate{
+		SerialNumber:          big.NewInt(time.Now().UnixNano()),
+		Subject:               issuer,
+		Issuer:                issuer,
+		SignatureAlgorithm:    x509.SHA512WithRSA,
+		PublicKeyAlgorithm:    x509.ECDSA,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().AddDate(0, 0, 10),
+		SubjectKeyId:          []byte{},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+	}
+
+	privateKey, _ := rsa.GenerateKey(rand.Reader, 4096)
+	caCertificateBinary, err := x509.CreateCertificate(rand.Reader, caCertificate, caCertificate, &privateKey.PublicKey, privateKey)
+
+	if err != nil {
+		return nil, fmt.Errorf("create cert failed: %v", err)
+	}
+
+	caCertificateParsed, _ := x509.ParseCertificate(caCertificateBinary)
+
+	certPool := x509.NewCertPool()
+	certPool.AddCert(caCertificateParsed)
+
+	return &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
+		ServerName:               ipAddress.String(),
+		Certificates: []tls.Certificate{{
+			Certificate: [][]byte{caCertificateBinary},
+			PrivateKey:  privateKey,
+		}},
+		RootCAs: certPool,
+	}, nil
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
