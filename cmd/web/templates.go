@@ -39,6 +39,7 @@ func humanDate(t time.Time) string {
 var functions = template.FuncMap{
 	"humanDate":   humanDate,
 	"StringsJoin": strings.Join,
+	"ToUpper":     strings.ToUpper,
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {

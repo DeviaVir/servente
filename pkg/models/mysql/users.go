@@ -64,6 +64,19 @@ func (m *UserModel) Get(id int) (*models.User, error) {
 	return &user, nil
 }
 
+func (m *UserModel) GetByEmail(email string) (*models.User, error) {
+	user := models.User{}
+
+	if err := m.DB.Where("email = ? AND active = ?", email, 1).Select("name", "active", "id", "created_at", "email").First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, models.ErrNoRecord
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 // ChangePassword allows easily changing a user's password
 func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) error {
 	user := models.User{}

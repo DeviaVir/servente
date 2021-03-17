@@ -1,0 +1,31 @@
+{{template "base" .}}
+
+{{define "title"}}{{.Organization.Identifier | ToUpper}}: User Management{{end}}
+
+{{define "main"}}
+  <h2>Add new user</h2>
+  <form action='/organization/{{.Organization.Identifier}}/users' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    {{with .Form}}
+      <div>
+        <label for='email'>Email address:</label>
+        {{with .Errors.Get "email"}}
+          <label class='error'>{{.}}</label>
+        {{end}}
+        <input type='email' name='email' placeholder='name@domain.ext' value='{{.Get "email"}}' id='email' />
+        <p>Please note: this email address should already be registered, we do not currently send emails!</p>
+      </div>
+      <div>
+        <input type='submit' value='Add user to organization' />
+      </div>
+    {{end}}
+  </form>
+  <br /><br />
+  <h2>Current users</h2>
+  <ul>
+    {{range $user := $.Organization.Users}}
+    <li>{{$user.Email}}</li>
+    {{end}}
+  </ul>
+  <br /><br />
+{{end}}

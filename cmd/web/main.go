@@ -47,6 +47,7 @@ type application struct {
 		Insert(string, string, string) error
 		Authenticate(string, string) (int, error)
 		Get(int) (*models.User, error)
+		GetByEmail(string) (*models.User, error)
 		ChangePassword(int, string, string) error
 		Organizations(*models.User) ([]*models.Organization, error)
 	}
@@ -55,9 +56,11 @@ type application struct {
 		Update(*models.User, *models.Organization, string) (*models.Organization, error)
 		UpdateAttribute(*models.Setting, string) (*models.OrganizationAttribute, error)
 		UpdateSetting(*models.Setting) (*models.Setting, error)
+		AddUser(*models.Organization, *models.User) (*models.User, error)
 		Get(string) (*models.Organization, error)
 		GetSettings(*models.Organization) ([]*models.Setting, error)
 		GetAttributes(*models.Organization) ([]*models.OrganizationAttribute, error)
+		GetUsers(*models.Organization) ([]*models.User, error)
 	}
 }
 

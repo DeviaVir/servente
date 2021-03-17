@@ -300,3 +300,83 @@ func (app *application) organizationSelector(w http.ResponseWriter, r *http.Requ
 
 	http.Redirect(w, r, fmt.Sprintf("/organization/%s", form.Get("identifier")), http.StatusSeeOther)
 }
+
+func (app *application) organizationsUsersForm(w http.ResponseWriter, r *http.Request) {
+	orgID := r.URL.Query().Get(":id")
+	if orgID == "" {
+		app.notFound(w)
+		return
+	}
+
+	o, err := app.organizations.Get(orgID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	app.render(w, r, "organization/users.page.tmpl", &templateData{
+		Organization: o,
+		Form:         forms.New(nil),
+	})
+}
+
+func (app *application) organizationsUsers(w http.ResponseWriter, r *http.Request) {
+	orgID := r.URL.Query().Get(":id")
+	if orgID == "" {
+		app.notFound(w)
+		return
+	}
+
+	o, err := app.organizations.Get(orgID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("email")
+	form.MaxLength("identifier", 255)
+
+	if !form.Valid() {
+		app.render(w, r, "organization/users.page.tmpl", &templateData{
+			Organization: o,
+			Form:         form,
+		})
+		return
+	}
+
+	// try to find user
+	user, err := app.users.GetByEmail(form.Get("email"))
+	if err != nil {
+		app.session.Put(r, "flash", "Email does not seem to exist!")
+		app.render(w, r, "organization/users.page.tmpl", &templateData{
+			Organization: o,
+			Form:         form,
+		})
+		return
+	}
+
+	_, err = app.organizations.AddUser(
+		o,
+		user,
+	)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/organization/%s/users", orgID), http.StatusSeeOther)
+}

@@ -106,6 +106,16 @@ func (m *OrganizationModel) UpdateAttribute(setting *models.Setting, val string)
 	return &attr, nil
 }
 
+func (m *OrganizationModel) AddUser(organization *models.Organization, user *models.User) (*models.User, error) {
+	if err := m.DB.Model(&organization).Association("Users").Append(user); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, models.ErrNoRecord
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
 func (m *OrganizationModel) Get(id string) (*models.Organization, error) {
 	organization := models.Organization{}
 
@@ -134,6 +144,11 @@ func (m *OrganizationModel) Get(id string) (*models.Organization, error) {
 		m.DB.Model(&attr).Association("Setting").Find(&setting)
 		organization.OrganizationAttributes[i].Setting = setting
 	}
+	users, err := m.GetUsers(&organization)
+	if err != nil {
+		return nil, err
+	}
+	organization.Users = users
 
 	return &organization, nil
 }
@@ -158,4 +173,15 @@ func (m *OrganizationModel) GetAttributes(organization *models.Organization) ([]
 	m.DB.Model(&organization).Association("OrganizationAttributes").Find(&settings)
 
 	return settings, nil
+}
+
+func (m *OrganizationModel) GetUsers(organization *models.Organization) ([]*models.User, error) {
+	if err := m.DB.Model(&organization).Association("Users").Error; err != nil {
+		return nil, err
+	}
+
+	var users []*models.User
+	m.DB.Model(&organization).Association("Users").Find(&users)
+
+	return users, nil
 }
