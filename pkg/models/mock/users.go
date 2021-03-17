@@ -40,6 +40,15 @@ func (m *UserModel) Get(id int) (*models.User, error) {
 	}
 }
 
+func (m *UserModel) GetByEmail(email string) (*models.User, error) {
+	switch email {
+	case "alice@example.com":
+		return mockUser, nil
+	default:
+		return nil, models.ErrNoRecord
+	}
+}
+
 func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) error {
 	switch id {
 	case 1:
